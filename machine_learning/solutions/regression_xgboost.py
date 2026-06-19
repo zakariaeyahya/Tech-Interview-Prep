@@ -43,7 +43,7 @@ from sklearn.preprocessing import OneHotEncoder, PolynomialFeatures, StandardSca
 warnings.filterwarnings("ignore", category=FutureWarning)
 
 RANDOM_STATE = 42
-DATA_PATH = Path(__file__).parent / "data" / "credit_risk.csv"
+DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "credit_risk.csv"
 TARGET = "expected_loss"
 CATEGORICAL_FEATURES = ["country", "sector"]
 NUMERIC_FEATURES = [
@@ -376,7 +376,7 @@ def main() -> None:
 
     # 1. Comparer tous les algorithmes
     comparison, best_model, best_name = compare_algorithms(X_train, y_train, X_test, y_test)
-    plot_algorithm_comparison(comparison, Path(__file__).parent / "outputs")
+    plot_algorithm_comparison(comparison, Path(__file__).resolve().parent.parent / "outputs")
 
     # 2. CV sur le meilleur modèle
     cross_validate_model(build_pipeline(best_name), X_train, y_train, model_name=best_name)
@@ -388,7 +388,7 @@ def main() -> None:
     # 4. Évaluation détaillée
     evaluate_model(tuned_model, X_test, y_test, label=best_name)
     analyze_overfitting(tuned_model, X_train, y_train, X_test, y_test)
-    plot_evaluation(tuned_model, X_test, y_test, Path(__file__).parent / "outputs", best_name)
+    plot_evaluation(tuned_model, X_test, y_test, Path(__file__).resolve().parent.parent / "outputs", best_name)
 
     print("\n" + "=" * 60)
     print("ALGORITHMES & TECHNIQUES COUVERTS")

@@ -1,0 +1,26 @@
+# Dossiers spécifiques
+AI/
+node_modules/
+iavia-common/
+
+# Fichiers temporaires et de compilation LaTeX
+*.aux
+*.bbl
+*.blg
+*.log
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.toc
+*.out
+*.lof
+*.lot
+*.nav
+*.snm
+*.vrb
+*.bcf
+*.run.xml
+
+# Fichiers de configuration VS Code (optionnel, à retirer si vous voulez partager vos paramètres)
+.vscode/
+lettres_motivation

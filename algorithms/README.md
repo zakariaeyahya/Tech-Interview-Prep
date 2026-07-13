@@ -27,11 +27,29 @@ et tests intégrés (`run_tests()` dans chaque fichier).
 | [`20_greedy.py`](20_greedy.py) | Glouton | jump game, intervalles |
 | [`21_bit_manipulation.py`](21_bit_manipulation.py) | Manipulation de bits | XOR, comptage de bits |
 
+## Deux formats disponibles
+
+Chaque pattern existe en **deux versions** au même endroit :
+
+- **`.py`** — script exécutable en ligne de commande, testé par `run_all.py`.
+- **`.ipynb`** — notebook Jupyter : une cellule markdown d'explication, une cellule
+  de code par fonction, puis une cellule de test à exécuter. Idéal pour réviser pas à pas.
+
+En plus :
+
+| Notebook | Rôle |
+|---|---|
+| [`00_revision_python.ipynb`](00_revision_python.ipynb) | Révision des **fondamentaux Python** (types, structures, boucles, fonctions, classes, exceptions, comprehensions, générateurs, pièges) — interactif, avec exercices |
+
 ## Lancer tous les tests
 ```bash
-python run_all.py
+python run_all.py          # tous les .py
 ```
+Pour les notebooks, ouvre-les dans Jupyter / VS Code et exécute « Run All » :
+la dernière cellule appelle `run_tests()` et affiche `OK` si tout passe.
 
 ## S'entraîner
-Lis l'énoncé en haut de chaque fichier, masque la solution, ré-implémente la fonction,
-puis exécute le fichier pour valider (`python 01_hash_map.py`).
+- **En script** : lis l'énoncé en haut de chaque `.py`, masque la solution,
+  ré-implémente la fonction, puis exécute le fichier (`python 01_hash_map.py`).
+- **En notebook** : ouvre le `.ipynb`, lis l'explication, réécris chaque fonction
+  dans sa cellule, puis lance la cellule de test juste en dessous.

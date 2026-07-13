@@ -20,7 +20,7 @@ iavia-common/
 *.vrb
 *.bcf
 *.run.xml
-
+__pycache__/
 # Fichiers de configuration VS Code (optionnel, à retirer si vous voulez partager vos paramètres)
 .vscode/
 lettres_motivation

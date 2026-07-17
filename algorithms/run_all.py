@@ -17,8 +17,8 @@ def run_module(path: Path) -> None:
 
 
 def main() -> None:
-    folder = Path(__file__).parent
-    files = sorted(folder.glob("*.py"))
+    folder = Path(__file__).parent / "lessons"
+    files = sorted(folder.glob("**/*.py"))
     files = [f for f in files if f.name not in ("run_all.py", "__init__.py")]
 
     print("=" * 60)

@@ -1,0 +1,801 @@
+% =====================================================================
+%  Fiche de revision -- Databricks Certified Data Engineer Associate
+%  Basee sur le guide officiel (version du 4 mai 2026) + AI Prep Guide
+%  Compilation : pdflatex revision-databricks-de-associate.tex  (x2)
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+
+% ---- Encodage & langue -------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+
+% ---- Mise en page ------------------------------------------------------
+\usepackage[a4paper,margin=2.2cm]{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\tcbuselibrary{skins,breakable}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=databricksred,
+  urlcolor=databricksred,
+  citecolor=databricksred,
+  pdftitle={Revision Databricks Certified Data Engineer Associate},
+  pdfauthor={Fiche de revision}
+}
+
+% ---- Couleurs ----------------------------------------------------------
+\definecolor{databricksred}{RGB}{255,54,33}
+\definecolor{darkgray}{RGB}{51,51,51}
+\definecolor{lightgray}{RGB}{245,245,245}
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{kwcolor}{RGB}{0,102,153}
+\definecolor{strcolor}{RGB}{163,21,21}
+\definecolor{comcolor}{RGB}{0,128,0}
+\definecolor{piegebg}{RGB}{255,244,229}
+\definecolor{piegeframe}{RGB}{230,126,34}
+\definecolor{clebg}{RGB}{232,245,233}
+\definecolor{cleframe}{RGB}{46,125,50}
+\definecolor{qcmbg}{RGB}{232,240,254}
+\definecolor{qcmframe}{RGB}{25,103,210}
+
+% ---- En-tetes / pieds de page -----------------------------------------
+\setlength{\headheight}{24pt}
+\addtolength{\topmargin}{-12pt}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{databricksred}{Databricks Data Engineer Associate}}
+\fancyhead[R]{\small\thepage}
+\fancyfoot[C]{\small\textit{Fiche de revision -- version examen 4 mai 2026}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{databricksred}\leaders\hrule height \headrulewidth\hfill}}
+
+% ---- Style des titres --------------------------------------------------
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{databricksred}}
+  {\thesection.}{0.6em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{darkgray}}
+  {\thesubsection}{0.6em}{}
+
+% ---- Style du code -----------------------------------------------------
+\lstdefinestyle{pystyle}{
+  language=Python,
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{kwcolor}\bfseries,
+  stringstyle=\color{strcolor},
+  commentstyle=\color{comcolor}\itshape,
+  numbers=left, numberstyle=\tiny\color{gray}, numbersep=8pt,
+  showstringspaces=false, breaklines=true, frame=single,
+  rulecolor=\color{gray!40}, tabsize=2, captionpos=b,
+  morekeywords={spark,readStream,writeStream,DataFrame,cloudFiles,option,format,load,save,toTable}
+}
+\lstdefinestyle{sqlstyle}{
+  language=SQL,
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{kwcolor}\bfseries,
+  stringstyle=\color{strcolor},
+  commentstyle=\color{comcolor}\itshape,
+  numbers=left, numberstyle=\tiny\color{gray}, numbersep=8pt,
+  showstringspaces=false, breaklines=true, frame=single,
+  rulecolor=\color{gray!40}, tabsize=2, captionpos=b,
+  morekeywords={COPY,INTO,MERGE,MATCHED,GRANT,REVOKE,DENY,CATALOG,SCHEMA,VOLUME,STREAMING,MATERIALIZED,CLUSTER,LIQUID,PREDICTIVE,OPTIMIZATION,EXTERNAL,MANAGED,MASK,ROW,FILTER}
+}
+\lstset{style=pystyle}
+
+% ---- Environnements encadres ------------------------------------------
+\newtcolorbox{piege}[1][]{
+  breakable, colback=piegebg, colframe=piegeframe,
+  fonttitle=\bfseries, title={\faWarning Piege d'examen #1},
+  boxrule=1pt, arc=2mm, left=3mm, right=3mm, top=2mm, bottom=2mm
+}
+\newtcolorbox{cle}[1][]{
+  breakable, colback=clebg, colframe=cleframe,
+  fonttitle=\bfseries, title={A retenir #1},
+  boxrule=1pt, arc=2mm, left=3mm, right=3mm, top=2mm, bottom=2mm
+}
+\newtcolorbox{qcm}[1][]{
+  breakable, colback=qcmbg, colframe=qcmframe,
+  fonttitle=\bfseries, title={QCM #1},
+  boxrule=1pt, arc=2mm, left=3mm, right=3mm, top=2mm, bottom=2mm
+}
+
+% faWarning fallback (pas de fontawesome requis)
+\providecommand{\faWarning}{\textbf{!} }
+
+% =====================================================================
+\begin{document}
+
+% ---------------------------------------------------------------- GARDE
+\begin{titlepage}
+\centering
+\vspace*{2cm}
+{\color{databricksred}\rule{\textwidth}{2pt}}\\[0.5cm]
+{\Huge\bfseries Databricks Certified\\[0.3cm] Data Engineer Associate}\\[0.4cm]
+{\LARGE Fiche de revision complete}\\[0.3cm]
+{\color{databricksred}\rule{\textwidth}{2pt}}\\[1.2cm]
+
+{\large Version de l'examen : \textbf{4 mai 2026}}\\[0.3cm]
+{\large Basee sur le guide officiel Databricks + AI Prep Guide}\\[2cm]
+
+\begin{tcolorbox}[width=0.8\textwidth,colback=lightgray,colframe=databricksred,
+  title=\textbf{En bref},fonttitle=\large]
+\begin{tabular}{@{}ll@{}}
+\textbf{Questions notees} & 45 QCM \\
+\textbf{Duree} & 90 minutes \\
+\textbf{Prix} & 200 USD (+ taxes) \\
+\textbf{Format} & En ligne ou centre de test \\
+\textbf{Aides} & Aucune autorisee \\
+\textbf{Prerequis} & Aucun (6 mois de pratique recommandes) \\
+\textbf{Validite} & 2 ans (recertification requise) \\
+\end{tabular}
+\end{tcolorbox}
+
+\vfill
+{\small Document de revision personnel -- verifier toujours sur \url{https://docs.databricks.com}}
+\end{titlepage}
+
+% ------------------------------------------------------------ SOMMAIRE
+\tableofcontents
+\newpage
+
+% ============================================ PONDERATIONS
+\section*{Carte des priorites : ponderation par domaine}
+\addcontentsline{toc}{section}{Carte des priorites}
+
+Le temps de revision doit suivre le poids de chaque domaine. \textbf{Transformation (22\%)
+et Ingestion (21\%) representent a eux seuls 43\% de l'examen} : c'est la ou il faut
+investir le plus.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{9cm}>{\centering\arraybackslash}p{2.5cm}>{\centering\arraybackslash}p{2.5cm}@{}}
+\toprule
+\textbf{Domaine} & \textbf{Poids} & \textbf{$\approx$ questions} \\
+\midrule
+\S3 -- Data Transformation and Modeling & \textbf{22\%} & $\sim$10 \\
+\S2 -- Data Ingestion and Loading       & \textbf{21\%} & $\sim$9 \\
+\S4 -- Working with Lakeflow Jobs        & 16\% & $\sim$7 \\
+\S7 -- Governance and Security           & 15\% & $\sim$7 \\
+\S5 -- Implementing CI/CD                & 10\% & $\sim$5 \\
+\S6 -- Troubleshooting, Monitoring, Optim.& 10\% & $\sim$5 \\
+\S1 -- Databricks Intelligence Platform  & 6\%  & $\sim$3 \\
+\midrule
+\textbf{Total} & \textbf{100\%} & \textbf{45} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ============================================ RENOMMAGES
+\section{Pieges de renommage (a lire en premier)}
+
+Les modeles d'IA ont ete entraines \emph{avant} les changements recents de la plateforme
+Databricks : ils utilisent souvent les anciens noms. \textbf{L'examen utilise les noms
+actuels}. Memorise ce tableau -- c'est la cause n\textsuperscript{o}1 d'echec en preparation avec l'IA.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+\begin{longtable}{@{}p{4.3cm}p{4.3cm}p{5.5cm}@{}}
+\toprule
+\textbf{Ancien nom} & \textbf{Nom actuel (2026)} & \textbf{Role} \\
+\midrule
+\endhead
+Databricks Workflows & \textbf{Lakeflow Jobs} & Orchestration de pipelines (DAG de taches) \\
+Delta Live Tables (DLT) & \textbf{Lakeflow Spark Declarative Pipelines} & Pipelines declaratifs ETL \\
+Databricks Repos & \textbf{Git Folders} & Integration Git dans le workspace \\
+Databricks Asset Bundles (DAB) & \textbf{Automation Bundles} (Declarative) & Packaging / promotion dev-test-prod \\
+Partner Connect / connecteurs & \textbf{Lakeflow Connect} & Ingestion managee depuis sources externes \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+\begin{cle}
+Si une reponse de QCM emploie un ancien nom (Workflows, DLT, Repos) alors qu'une autre
+emploie le nom actuel pour la meme chose, l'examen tend a privilegier la terminologie
+\textbf{a jour}. Mais attention : le concept prime sur le nom -- le fond ne change pas.
+\end{cle}
+
+% ============================================ S1 PLATFORM
+\section{Databricks Intelligence Platform (6\%)}
+
+\subsection{Architecture en couches}
+
+La plateforme separe \textbf{control plane} (gere par Databricks : UI, orchestration,
+metadonnees) et \textbf{compute/data plane} (dans ton cloud : clusters, stockage objet
+ADLS/S3/GCS).
+
+\subsection{Delta Lake}
+
+Format de table par defaut. Points cles pour l'examen :
+\begin{itemize}[leftmargin=*,nosep]
+  \item \textbf{Transactions ACID} sur le stockage objet (via le transaction log \texttt{\_delta\_log}).
+  \item \textbf{Time travel} : interroger une version anterieure (\texttt{VERSION AS OF}, \texttt{TIMESTAMP AS OF}) $\rightarrow$ rollback fiable apres un mauvais ingest.
+  \item \textbf{Schema enforcement} + \textbf{schema evolution}.
+  \item \textbf{MERGE} (upsert), \texttt{OPTIMIZE}, \texttt{VACUUM}.
+\end{itemize}
+
+\subsection{Unity Catalog (UC)}
+
+Couche de gouvernance centralisee. Hierarchie a 3 niveaux :
+\[
+\texttt{catalog} \;\rightarrow\; \texttt{schema (database)} \;\rightarrow\; \texttt{table / view / volume / model}
+\]
+UC fournit : controle d'acces fin, lineage, audit, partage. \textbf{Source unique de verite}
+pour l'IA et le BI.
+
+\subsection{Services de compute (clusters)}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{3.5cm}p{11cm}@{}}
+\toprule
+\textbf{Type} & \textbf{Usage / caracteristiques} \\
+\midrule
+All-purpose & Developpement interactif, notebooks partages, exploration. Plus cher. \\
+Job cluster & Cree pour un job, detruit a la fin. Moins cher pour l'ETL planifie. \\
+SQL Warehouse & Requetes SQL/BI, demarrage rapide, multi-utilisateurs concurrents. \\
+Single-node & Petits tests, dev leger, pas de workers. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{piege}
+Pour \textbf{plusieurs analystes lancant des requetes SQL ad hoc} avec demarrage rapide et
+concurrence : la bonne reponse penche vers un \textbf{SQL Warehouse} (ou cluster high-concurrency
+avec autoscaling) -- \emph{pas} un job cluster (fait pour l'ETL planifie) ni un single-node.
+\end{piege}
+
+\begin{qcm}
+Un ingenieur veut : iteration rapide, rollback fiable apres mauvais ingest, piste d'audit
+reglementaire, et source unique de verite pour IA + BI. Quelle strategie ?
+
+\smallskip
+A. Stockage CSV sur DBFS + copies nocturnes \hfill
+B. \textbf{Delta Lake (ACID + time travel) gouverne par Unity Catalog} \\
+C. Stockage objet seul + requetes SQL ad hoc \hfill
+D. DataFrames en memoire ephemeres
+
+\smallskip
+\textit{Reponse : \textbf{B}. Delta = ACID + time travel (rollback, audit) ; UC = acces
+coherent et lineage. Les autres options n'offrent ni transactions ni gouvernance.}
+\end{qcm}
+
+% ============================================ S2 INGESTION
+\section{Data Ingestion and Loading (21\%)}
+
+\subsection{Les patterns d'ingestion}
+
+Batch / streaming / incremental. Le choix depend de : volume, frequence, types de donnees,
+besoins de gouvernance.
+
+\subsection{COPY INTO}
+
+Commande SQL \textbf{idempotente} : charge de maniere incrementale des fichiers depuis le
+stockage objet vers une table UC. Retient les fichiers deja charges $\rightarrow$ pas de doublons.
+
+\begin{lstlisting}[style=sqlstyle,caption={COPY INTO depuis le stockage objet}]
+COPY INTO mon_catalogue.bronze.ventes
+FROM 's3://bucket/ventes/'
+FILEFORMAT = CSV
+FORMAT_OPTIONS ('header' = 'true', 'inferSchema' = 'true')
+COPY_OPTIONS ('mergeSchema' = 'true');
+\end{lstlisting}
+
+\subsection{Auto Loader (\texttt{cloudFiles})}
+
+Ingestion \textbf{incrementale en streaming} de nouveaux fichiers. Gere schema inference,
+schema evolution et checkpointing. Deux modes de detection :
+\begin{itemize}[leftmargin=*,nosep]
+  \item \textbf{Directory listing} : liste le repertoire (simple, par defaut).
+  \item \textbf{File notification} : s'abonne aux evenements du cloud (scalable, gros volumes).
+\end{itemize}
+
+\begin{lstlisting}[style=pystyle,caption={Auto Loader avec evolution de schema}]
+df = (spark.readStream
+        .format("cloudFiles")
+        .option("cloudFiles.format", "json")
+        .option("cloudFiles.schemaLocation", "/chk/schema")
+        .load("s3://bucket/entrant/"))
+
+(df.writeStream
+   .option("checkpointLocation", "/chk/ventes")
+   .option("mergeSchema", "true")
+   .trigger(availableNow=True)   # mode batch : traite tout puis s'arrete
+   .toTable("mon_catalogue.bronze.evenements"))
+\end{lstlisting}
+
+\subsection{COPY INTO vs Auto Loader : le choix cle}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{4.5cm}p{4.7cm}p{4.7cm}@{}}
+\toprule
+ & \textbf{COPY INTO} & \textbf{Auto Loader} \\
+\midrule
+Nature & SQL, batch & Structured Streaming \\
+Volume de fichiers & Milliers (modere) & Millions (tres scalable) \\
+Detection nouveaux fichiers & Suivi interne des fichiers charges & Directory listing ou file notification \\
+Schema evolution & \texttt{mergeSchema} & Automatique + \texttt{schemaLocation} \\
+Ideal pour & Chargements periodiques simples & Flux continu / gros volumes \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Lakeflow Connect}
+
+Connecteurs \textbf{managed} (sources SaaS/BD d'entreprise : Salesforce, SQL Server...) et
+\textbf{standard}. Ingestion fiable et gouvernee dans des tables UC, y compris donnees
+semi-structurees (JSON, nested).
+
+\begin{piege}
+\textbf{Auto Loader} = gros volumes, streaming, evolution de schema auto. \textbf{COPY INTO}
+= batch SQL idempotent, volumes moderes. \textbf{Lakeflow Connect} = sources d'entreprise
+managees. Ne les confonds pas : le choix se justifie par volume + frequence + type de source.
+\end{piege}
+
+\begin{piege}[: logs d'audit]
+Les \textbf{audit logs} Databricks sont livres en \textbf{JSON}, generalement sous 15 min,
+et de nouvelles livraisons \textbf{peuvent ecraser} des fichiers existants (ce n'est pas
+CSV, pas Parquet, pas hebdomadaire).
+\end{piege}
+
+\begin{qcm}
+Besoin : ingerer en continu des millions de petits fichiers JSON arrivant en permanence,
+avec evolution de schema automatique. Quelle methode ?
+
+\smallskip
+A. COPY INTO en batch nocturne \hfill
+B. \textbf{Auto Loader (cloudFiles) en streaming} \\
+C. INSERT manuel par notebook \hfill
+D. Lakeflow Connect vers Salesforce
+
+\smallskip
+\textit{Reponse : \textbf{B}. Auto Loader gere volume massif + schema evolution + checkpointing.}
+\end{qcm}
+
+% ============================================ S3 TRANSFORMATION
+\section{Data Transformation and Modeling (22\%)}
+
+\subsection{Architecture medaillon}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{2.5cm}p{12cm}@{}}
+\toprule
+\textbf{Couche} & \textbf{Role} \\
+\midrule
+Bronze & Donnees brutes ingerees telles quelles (append). \\
+Silver & Donnees nettoyees : nulls traites, types standardises, dedupliquees, jointures. \\
+Gold & Donnees agregees pretes pour le BI/analytics (tables, vues, vues materialisees). \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Nettoyage Bronze $\rightarrow$ Silver}
+
+\begin{lstlisting}[style=pystyle,caption={Lire bronze, nettoyer, ecrire silver}]
+from pyspark.sql import functions as F
+
+bronze = spark.read.table("cat.bronze.clients")
+
+silver = (bronze
+    .na.drop(subset=["client_id"])                 # supprimer nulls cles
+    .withColumn("date", F.to_date("date_str"))     # standardiser le type
+    .dropDuplicates(["client_id"]))                # deduplication
+
+silver.write.mode("overwrite").saveAsTable("cat.silver.clients")
+\end{lstlisting}
+
+\subsection{Jointures (joins)}
+
+\begin{itemize}[leftmargin=*,nosep]
+  \item \texttt{inner}, \texttt{left}, \texttt{right}, \texttt{full}, \texttt{cross}.
+  \item \textbf{Broadcast join} : diffuse la petite table sur tous les executors $\rightarrow$
+  evite un shuffle couteux. Controle par \texttt{spark.sql.autoBroadcastJoinThreshold}.
+  \item Jointure sur \textbf{cles multiples}, puis \texttt{union} / \texttt{unionAll}.
+\end{itemize}
+
+\begin{lstlisting}[style=pystyle,caption={Broadcast join et agregations}]
+from pyspark.sql.functions import broadcast, approx_count_distinct, mean
+
+df = grandes.join(broadcast(petites), "cle", "left")
+
+agg = (df.groupBy("region")
+         .agg(approx_count_distinct("client_id").alias("clients"),
+              mean("montant").alias("panier_moyen")))
+\end{lstlisting}
+
+\subsection{Manipulations de colonnes/lignes}
+
+Ajouter/supprimer/renommer colonnes, filtres, split, \textbf{exploser des tableaux}
+(\texttt{explode}), deduplication, agregations (\texttt{count}, \texttt{approx\_count\_distinct},
+\texttt{mean}, \texttt{summary}).
+
+\subsection{Parametres de tuning a connaitre}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{6.5cm}p{8cm}@{}}
+\toprule
+\textbf{Parametre} & \textbf{Effet} \\
+\midrule
+\texttt{spark.sql.shuffle.partitions} & Nombre de partitions apres un shuffle (join/groupBy). \\
+\texttt{spark.default.parallelism} & Parallelisme par defaut des RDD. \\
+\texttt{spark.executor.memory} / \texttt{driver.memory} & Memoire allouee par executor / driver. \\
+\texttt{spark.sql.autoBroadcastJoinThreshold} & Seuil sous lequel une table est broadcastee. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Objets de la couche Gold (UC)}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{4cm}p{10.5cm}@{}}
+\toprule
+\textbf{Objet} & \textbf{Description} \\
+\midrule
+Table (managed) & Donnees + metadonnees gerees par UC. \\
+View & Requete sauvegardee, calculee a la lecture (pas de stockage). \\
+Materialized view & Resultat precalcule et rafraichi $\rightarrow$ requetes BI rapides. \\
+Streaming table & Table alimentee en continu par un flux (ingestion/transfo incrementale). \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{piege}
+\textbf{View} = recalculee a chaque lecture (toujours fraiche, plus lente).
+\textbf{Materialized view} = precalculee (rapide, mais doit etre rafraichie).
+\textbf{Streaming table} = mise a jour incrementale continue. Sais distinguer les trois usages.
+\end{piege}
+
+\begin{qcm}
+Une equipe BI veut des tableaux de bord rapides sur des agregats couteux recalcules souvent.
+Quel objet Gold ?
+
+\smallskip
+A. Vue standard \hfill
+B. \textbf{Vue materialisee} \hfill
+C. Table temporaire \hfill
+D. CTE
+
+\smallskip
+\textit{Reponse : \textbf{B}. La vue materialisee precalcule et stocke le resultat $\rightarrow$
+lectures BI rapides, contrairement a la vue standard recalculee a chaque fois.}
+\end{qcm}
+
+% ============================================ S4 LAKEFLOW JOBS
+\section{Working with Lakeflow Jobs (16\%)}
+
+\subsection{Orchestration par DAG}
+
+Un \textbf{Lakeflow Job} (ex-Workflow) est un graphe oriente acyclique (DAG) de \textbf{taches}
+avec dependances. Types de taches : \textbf{notebook}, \textbf{SQL query}, \textbf{dashboard},
+\textbf{pipeline} (Lakeflow Spark Declarative Pipeline).
+
+\subsection{Control flow}
+
+\begin{itemize}[leftmargin=*,nosep]
+  \item \textbf{Retries} : reessais automatiques en cas d'echec.
+  \item \textbf{Conditional / branching} : tache \texttt{If/else} selon une condition.
+  \item \textbf{Looping} : \texttt{For each} sur une liste de valeurs.
+  \item \textbf{Dependances} : une tache s'execute apres la reussite de ses parents.
+\end{itemize}
+
+\subsection{Triggers (declencheurs)}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{4cm}p{10.5cm}@{}}
+\toprule
+\textbf{Trigger} & \textbf{Declenche quand...} \\
+\midrule
+Scheduled (cron) & Base sur le temps : a intervalle fixe (ex. toutes les heures). \\
+File arrival & Un nouveau fichier arrive a un emplacement de stockage. \\
+Table update & Une table amont est mise a jour (data-driven). \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{piege}
+\textbf{Time-based} (scheduled) : pour des donnees a horaire previsible.
+\textbf{Data-driven} (file arrival / table update) : pour reagir a la \emph{disponibilite
+reelle} des donnees, sans attendre une heure fixe ni interroger inutilement.
+\end{piege}
+
+\begin{qcm}
+Les donnees sources arrivent a des heures imprevisibles. On veut lancer le pipeline des
+qu'un fichier est depose, sans polling. Quel trigger ?
+
+\smallskip
+A. Scheduled toutes les 5 min \hfill
+B. \textbf{File arrival} \hfill
+C. Manuel \hfill
+D. Table update sur une table sans lien
+
+\smallskip
+\textit{Reponse : \textbf{B}. Le trigger file arrival reagit a l'arrivee du fichier -- data-driven,
+plus efficace qu'un cron serre.}
+\end{qcm}
+
+% ============================================ S5 CI/CD
+\section{Implementing CI/CD (10\%)}
+
+\subsection{Git Folders (ex-Repos)}
+
+Dans le workspace : creer/changer de branche, commit, push, ouvrir une pull request via
+l'integration Git. Workflow de dev versionne.
+
+\subsection{Automation Bundles (ex-Databricks Asset Bundles / DAB)}
+
+Format declaratif (\texttt{databricks.yml}) qui \textbf{package et promeut} du code + des
+ressources (Lakeflow Jobs, pipelines declaratifs, etc.) a travers \textbf{dev / test / prod}.
+Gestion des differences d'environnement par \textbf{variables et overrides} (targets).
+
+\begin{lstlisting}[style=sqlstyle,caption={Structure d'un bundle (databricks.yml, simplifie)}]
+bundle:
+  name: mon_pipeline_etl
+
+targets:
+  dev:
+    default: true
+    workspace: { host: https://dev.cloud.databricks.com }
+  prod:
+    workspace: { host: https://prod.cloud.databricks.com }
+    variables: { catalogue: prod_cat }
+\end{lstlisting}
+
+\subsection{Databricks CLI}
+
+Valide, deploie et gere les bundles dans des workflows CI/CD automatises :
+\begin{itemize}[leftmargin=*,nosep]
+  \item \texttt{databricks bundle validate} -- verifie la config.
+  \item \texttt{databricks bundle deploy -t prod} -- deploie sur la cible.
+  \item \texttt{databricks bundle run} -- lance un job du bundle.
+\end{itemize}
+
+\begin{piege}
+Pour \textbf{deployer, versionner et orchestrer} des pipelines ETL de facon modulaire et
+repetable (CI/CD) : la bonne reponse est \textbf{Automation Bundles + Git + CLI}, \emph{pas}
+des wheels dans des Volumes, ni la revision history des notebooks comme systeme de versioning.
+\end{piege}
+
+\begin{qcm}
+Une equipe veut un moyen modulaire de deployer, versionner et orchestrer ses pipelines ETL
+avec CI/CD et repetabilite. Quelle fonctionnalite ?
+
+\smallskip
+A. Modeles UC pour representer les jobs ETL \hfill
+B. Wheels dans des Volumes UC \\
+C. Notebook monte sur Volume + Jobs API v2 \hfill
+D. \textbf{Automation Bundles (DABs) versionnes dans Git, promus par CI/CD}
+
+\smallskip
+\textit{Reponse : \textbf{D}. Les bundles definissent ressources + code, versionnes dans Git,
+promus dev$\to$test$\to$prod par CI/CD automatise.}
+\end{qcm}
+
+% ============================================ S6 TROUBLESHOOTING
+\section{Troubleshooting, Monitoring, Optimization (10\%)}
+
+\subsection{Monitoring via l'UI Lakeflow Jobs}
+
+\begin{itemize}[leftmargin=*,nosep]
+  \item \textbf{Run history} : comparer les temps d'execution actuels aux baselines historiques
+  (detecter les tendances de degradation).
+  \item Interpreter les statuts de jobs, lire le \textbf{DAG} pour reperer les blocages amont.
+  \item Suivre les temps d'execution et les taux d'echec.
+\end{itemize}
+
+\subsection{Bottlenecks dans la Spark UI}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{3.5cm}p{11cm}@{}}
+\toprule
+\textbf{Probleme} & \textbf{Symptome / metrique} \\
+\midrule
+Data skew & Une tache beaucoup plus longue que les autres ; Max shuffle read $\gg$ Median. \\
+Shuffling & Beaucoup d'echange de donnees entre executors (joins/groupBy). \\
+Disk spilling & Donnees ecrites sur disque faute de memoire (spill memory/disk). \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{piege}[: data skew]
+Symptome typique : \emph{la plupart des taches finissent en <30s mais une prend >10 min,
+Max shuffle read $\gg$ Median}. C'est du \textbf{data skew}. La solution robuste :
+verifier que l'\textbf{Adaptive Query Execution (AQE) avec skew join handling} est actif
+(il decoupe la partition surdimensionnee au runtime). Ajouter des executors ne corrige
+pas le desequilibre.
+\end{piege}
+
+\subsection{Optimisations Delta}
+
+\begin{itemize}[leftmargin=*,nosep]
+  \item \textbf{Liquid Clustering} : remplace le partitionnement + ZORDER, s'adapte
+  automatiquement aux patterns de requetes (\texttt{CLUSTER BY}).
+  \item \textbf{Predictive Optimization} : Databricks execute automatiquement \texttt{OPTIMIZE}
+  et \texttt{VACUUM} au bon moment, sans reglage manuel.
+\end{itemize}
+
+\subsection{Diagnostics cluster}
+
+Savoir diagnostiquer : echecs de demarrage de cluster, conflits de librairies,
+erreurs out-of-memory (OOM).
+
+\begin{qcm}
+Dans la Spark UI, une tache prend 10 min alors que les autres finissent en 30s, avec un
+Max shuffle read a 5 GB contre 400 MB en median. Que faire ?
+
+\smallskip
+A. Agrandir le cluster \hfill
+B. \textbf{Confirmer que l'AQE avec skew join handling est actif} \\
+C. Reduire \texttt{shuffle.partitions} \hfill
+D. Repartitionner manuellement avec une salt key
+
+\smallskip
+\textit{Reponse : \textbf{B}. C'est du data skew ; l'AQE decoupe automatiquement la partition
+surdimensionnee. (D peut aider mais B est la solution native recommandee.)}
+\end{qcm}
+
+% ============================================ S7 GOVERNANCE
+\section{Governance and Security (15\%)}
+
+\subsection{Tables managed vs external}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{3cm}p{5.5cm}p{5.5cm}@{}}
+\toprule
+ & \textbf{Managed} & \textbf{External} \\
+\midrule
+Donnees & Gerees par UC (emplacement gere) & A un emplacement externe que tu specifies \\
+DROP TABLE & Supprime donnees + metadonnees & Supprime seulement les metadonnees \\
+Usage & Cas par defaut, cycle de vie simple & Donnees partagees / possedees ailleurs \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{lstlisting}[style=sqlstyle,caption={Creation et conversion de tables}]
+-- Table managed
+CREATE TABLE cat.silver.clients (id INT, nom STRING);
+
+-- Table external (LOCATION explicite)
+CREATE TABLE cat.silver.ext_clients (id INT)
+LOCATION 's3://bucket/clients/';
+\end{lstlisting}
+
+\subsection{Controle d'acces : GRANT / REVOKE / DENY}
+
+Appliques a des \textbf{principals} (users, groups, service principals) aux bons niveaux de
+la hierarchie (catalog / schema / table).
+
+\begin{lstlisting}[style=sqlstyle,caption={Privileges Unity Catalog}]
+GRANT SELECT ON TABLE cat.silver.clients TO `analystes`;
+GRANT USAGE  ON SCHEMA cat.silver          TO `analystes`;
+REVOKE SELECT ON TABLE cat.silver.clients FROM `stagiaires`;
+DENY   MODIFY ON TABLE cat.silver.clients TO `lecture_seule`;
+\end{lstlisting}
+
+\subsection{Masquage et securite au niveau ligne/colonne}
+
+\begin{itemize}[leftmargin=*,nosep]
+  \item \textbf{Column masking} : masquer une colonne sensible selon le groupe de l'utilisateur.
+  \item \textbf{Row-level security (RLS)} : filtrer les lignes visibles selon l'utilisateur.
+  \item \textbf{ABAC policies} (Attribute-Based Access Control) : controler centralement le
+  filtrage de lignes et le masquage de colonnes pour les donnees sensibles, via des attributs.
+\end{itemize}
+
+\begin{piege}
+\textbf{Column masking} agit sur les \emph{colonnes} (cache une valeur).
+\textbf{Row-level security} agit sur les \emph{lignes} (cache des enregistrements).
+\textbf{ABAC} = gestion centralisee des deux via des attributs/tags, a l'echelle.
+\end{piege}
+
+\begin{qcm}
+On veut que les analystes voient la table clients mais que le numero de carte bancaire soit
+masque pour les groupes non autorises. Quel mecanisme ?
+
+\smallskip
+A. Row-level security \hfill
+B. \textbf{Column-level masking} \hfill
+C. REVOKE sur la table \hfill
+D. Table external
+
+\smallskip
+\textit{Reponse : \textbf{B}. Le masquage de colonne cache une valeur precise selon le groupe,
+sans retirer l'acces a toute la table.}
+\end{qcm}
+
+% ============================================ HANDS-ON
+\section{Checklist hands-on (a savoir faire les yeux fermes)}
+
+Le guide de preparation insiste : \textbf{lire ne suffit pas}. Construis chacune de ces taches
+dans Databricks Free Edition (< 30 min chacune). Toute tache que tu ne sais pas faire = ta
+prochaine cible de revision.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+\begin{longtable}{@{}p{0.6cm}p{10.4cm}p{3cm}@{}}
+\toprule
+ & \textbf{Tache} & \textbf{Objectif} \\
+\midrule
+\endhead
+$\square$ & Ingerer des fichiers d'un dossier cloud avec \textbf{Auto Loader} (schema evolution) & \S2 \\
+$\square$ & Charger des CSV avec \textbf{COPY INTO} dans une table UC & \S2 \\
+$\square$ & Nettoyer bronze $\rightarrow$ silver (nulls, types, \textbf{dropDuplicates}) & \S3 \\
+$\square$ & Faire un \textbf{broadcast join} + agregations (\texttt{approx\_count\_distinct}) & \S3 \\
+$\square$ & Creer une \textbf{materialized view} et une \textbf{streaming table} & \S3 \\
+$\square$ & Construire un \textbf{Lakeflow Job} multi-taches avec dependances + retries & \S4 \\
+$\square$ & Configurer un trigger \textbf{file arrival} et un trigger \textbf{scheduled} & \S4 \\
+$\square$ & Deployer un \textbf{Automation Bundle} sur une cible via la \textbf{CLI} & \S5 \\
+$\square$ & Lire la \textbf{Spark UI} et identifier un \textbf{data skew} & \S6 \\
+$\square$ & Appliquer \textbf{GRANT / REVOKE} et un \textbf{column mask} en SQL & \S7 \\
+$\square$ & Creer une table \textbf{managed} et une \textbf{external}, puis les DROP (observer la difference) & \S7 \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+% ============================================ QUESTIONS OFFICIELLES
+\section{Les 5 questions officielles du guide (corrigees)}
+
+Ces questions proviennent du guide officiel. Comprends \emph{pourquoi} chaque reponse est correcte.
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Data skew (Spark UI).} Tache 10 min vs 30s, Max shuffle read $\gg$ median.
+        \textbf{Reponse B} : AQE + skew join handling decoupe la partition au runtime.
+  \item \textbf{Compute / plateforme.} Iteration rapide, rollback, audit, source unique IA+BI.
+        \textbf{Reponse B} : Delta Lake (ACID + time travel) gouverne par Unity Catalog.
+  \item \textbf{Audit logs.} Format et comportement des logs d'audit Databricks.
+        \textbf{Reponse A} : JSON, < 15 min, les livraisons peuvent ecraser des fichiers.
+  \item \textbf{Cluster pour analystes SQL ad hoc.} Concurrence + demarrage rapide + cout.
+        \textbf{Reponse C} : cluster high-concurrency avec autoscaling.
+  \item \textbf{CI/CD pipelines ETL modulaires.} Deployer, versionner, orchestrer.
+        \textbf{Reponse D} : Automation Bundles (DABs), versionnes dans Git, promus par CI/CD.
+\end{enumerate}
+
+% ============================================ MEMO
+\section*{Annexe : memo derniere minute (a relire 1h avant)}
+\addcontentsline{toc}{section}{Annexe : memo derniere minute}
+
+\begin{cle}[: les reflexes qui font gagner des points]
+\begin{itemize}[leftmargin=*,nosep]
+  \item \textbf{Noms actuels} : Lakeflow Jobs, Lakeflow Spark Declarative Pipelines, Git Folders,
+  Automation Bundles, Lakeflow Connect. Jamais Workflows / DLT / Repos / DAB dans une bonne reponse.
+  \item \textbf{Auto Loader} = streaming, gros volumes, schema evolution auto. \textbf{COPY INTO}
+  = batch SQL idempotent. \textbf{Lakeflow Connect} = sources d'entreprise managees.
+  \item \textbf{Delta} = ACID + time travel (rollback/audit). \textbf{Unity Catalog} = gouvernance,
+  hierarchie catalog $\to$ schema $\to$ objet.
+  \item \textbf{Medaillon} : bronze (brut) $\to$ silver (propre) $\to$ gold (agrege BI).
+  \item \textbf{View} recalculee / \textbf{Materialized view} precalculee / \textbf{Streaming table} incrementale.
+  \item \textbf{Data skew} $\rightarrow$ AQE + skew join handling.
+  \item \textbf{Liquid Clustering} (remplace partition+ZORDER) ; \textbf{Predictive Optimization}
+  (OPTIMIZE/VACUUM auto).
+  \item \textbf{Triggers} : scheduled (temps) vs file arrival / table update (data-driven).
+  \item \textbf{Bundles + Git + CLI} = CI/CD. \texttt{validate} $\to$ \texttt{deploy} $\to$ \texttt{run}.
+  \item \textbf{Managed} : DROP supprime les donnees. \textbf{External} : DROP garde les donnees.
+  \item \textbf{GRANT/REVOKE/DENY} sur principals ; \textbf{column mask} (colonne) / \textbf{RLS}
+  (ligne) / \textbf{ABAC} (centralise par attributs).
+\end{itemize}
+\end{cle}
+
+\vfill
+\begin{center}
+\textit{Verifie toujours sur} \url{https://docs.databricks.com} \textit{-- bonne chance !}
+\end{center}
+
+\end{document}

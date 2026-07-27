@@ -2,6 +2,7 @@
 AI/
 node_modules/
 iavia-common/
+formation_recherche_emploi/
 
 # Fichiers temporaires et de compilation LaTeX
 *.aux

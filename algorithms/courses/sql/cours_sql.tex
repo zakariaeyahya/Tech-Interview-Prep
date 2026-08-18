@@ -1,0 +1,587 @@
+% =============================================================================
+%  cours_sql.tex - SQL : des bases a la preparation d'entretien technique
+%  Syntaxe de reference : PostgreSQL (differences MySQL notees quand utiles).
+%
+%  Compilation (deux passes pour la table des matieres) :
+%     pdflatex cours_sql.tex
+%     pdflatex cours_sql.tex
+% =============================================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage[table]{xcolor}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+
+% --- Couleurs ---------------------------------------------------------------
+\definecolor{primary}{HTML}{1B4B5A}    % bleu petrole (theme SQL)
+\definecolor{accent}{HTML}{2E86DE}     % bleu accent
+\definecolor{codebg}{HTML}{F4F7FB}
+\definecolor{codekw}{HTML}{1B4B5A}
+\definecolor{codestr}{HTML}{B7472A}
+\definecolor{codecom}{HTML}{7F8C99}
+\definecolor{rulecol}{HTML}{D5DEE8}
+\definecolor{warnbg}{HTML}{FFF4E6}
+\definecolor{warnframe}{HTML}{E67E22}
+
+\hypersetup{colorlinks=true, linkcolor=accent, urlcolor=accent, pdftitle={Cours SQL - des bases a l'entretien technique}}
+
+% --- En-tete / pied de page -------------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{primary}Cours SQL -- des bases a l'entretien technique}
+\fancyhead[R]{\small\color{codecom}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% --- Titres -------------------------------------------------------------
+\titleformat{\section}{\Large\bfseries\color{primary}}{\thesection.}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries\color{accent}}{\thesubsection}{0.6em}{}
+
+% --- Style du code SQL -------------------------------------------------------
+\lstdefinestyle{sql}{
+  language=SQL,
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{codekw}\bfseries,
+  stringstyle=\color{codestr},
+  commentstyle=\color{codecom}\itshape,
+  numbers=none,
+  frame=single,
+  rulecolor=\color{rulecol},
+  breaklines=true,
+  showstringspaces=false,
+  columns=fullflexible,
+  keepspaces=true,
+  aboveskip=8pt, belowskip=8pt,
+  xleftmargin=6pt, xrightmargin=6pt,
+  morekeywords={ILIKE, RETURNING, WINDOW, PARTITION, OVER, LATERAL, WITH,
+    RECURSIVE, UPSERT, ONCONFLICT, CONFLICT, EXCLUDED, FILTER, CASCADE,
+    RESTRICT, SERIAL, BIGSERIAL, TEXT, JSONB, TRUE, FALSE},
+  literate=%
+    {é}{{\'e}}1 {è}{{\`e}}1 {ê}{{\^e}}1 {à}{{\`a}}1 {ô}{{\^o}}1
+    {î}{{\^i}}1 {ç}{{\c c}}1 {É}{{\'E}}1 {È}{{\`E}}1 {ù}{{\`u}}1 {û}{{\^u}}1,
+}
+\lstset{style=sql}
+
+% --- Boites -----------------------------------------------------------------
+\newtcolorbox{infobox}[1]{colback=codebg,colframe=accent,title=#1,
+  fonttitle=\bfseries\color{white},boxrule=0.5pt,arc=2pt,left=6pt,right=6pt,top=4pt,bottom=4pt}
+
+\newtcolorbox{piege}{colback=warnbg,colframe=warnframe,title=\textbf{Piege courant},
+  fonttitle=\bfseries\color{white},boxrule=0.5pt,arc=2pt,left=6pt,right=6pt,top=4pt,bottom=4pt}
+
+% =============================================================================
+\begin{document}
+
+% --- Page de titre ----------------------------------------------------------
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+{\color{primary}\Huge\bfseries SQL\par}
+\vspace{0.6cm}
+{\color{accent}\LARGE Des bases a la preparation d'entretien technique\par}
+\vspace{1.2cm}
+{\large Requetes, jointures, agregations, fonctions fenetrees,\\
+CTE et index -- avec la syntaxe PostgreSQL.\par}
+\vfill
+{\color{codecom}\large Cours a imprimer -- support d'entrainement\par}
+\vspace{2cm}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% =============================================================================
+\section{Introduction}
+% =============================================================================
+SQL (\emph{Structured Query Language}) est le langage utilise pour interroger et
+manipuler des donnees stockees dans une base de donnees \emph{relationnelle} :
+des tables composees de lignes et de colonnes, reliees entre elles par des
+\emph{cles}. Contrairement a un langage comme Python, SQL est \emph{declaratif} :
+on decrit \emph{quel} resultat on veut, pas \emph{comment} l'obtenir -- c'est le
+\emph{moteur} de la base (le \emph{query planner}) qui choisit la meilleure
+strategie d'execution.
+
+Les exemples de ce cours utilisent la syntaxe \textbf{PostgreSQL}. L'essentiel
+est du SQL standard (norme ANSI) et fonctionne tel quel sur la plupart des
+moteurs (MySQL, SQL Server, SQLite) ; les differences notables sont signalees
+dans des encadres.
+
+\begin{infobox}{Les grandes familles de commandes}
+\textbf{DDL} (\emph{Data Definition Language}) : \texttt{CREATE}, \texttt{ALTER},
+\texttt{DROP} -- definissent la structure. \textbf{DML} (\emph{Data Manipulation
+Language}) : \texttt{SELECT}, \texttt{INSERT}, \texttt{UPDATE}, \texttt{DELETE}
+-- manipulent les donnees. \textbf{DCL} (\emph{Data Control Language}) :
+\texttt{GRANT}, \texttt{REVOKE} -- gerent les droits d'acces.
+\end{infobox}
+
+% =============================================================================
+\section{Creer et peupler des tables}
+% =============================================================================
+Une table est definie par ses colonnes, chacune avec un \emph{type} et
+d'eventuelles \emph{contraintes}. Les contraintes empechent les donnees
+invalides d'entrer dans la base -- c'est la premiere ligne de defense de
+l'integrite des donnees, avant meme le code applicatif.
+
+\begin{lstlisting}
+CREATE TABLE clients (
+    id          SERIAL PRIMARY KEY,          -- entier auto-incremente
+    nom         TEXT NOT NULL,
+    email       TEXT UNIQUE NOT NULL,
+    age         INTEGER CHECK (age >= 0),
+    cree_le     TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE commandes (
+    id          SERIAL PRIMARY KEY,
+    client_id   INTEGER NOT NULL REFERENCES clients(id),  -- cle etrangere
+    montant     NUMERIC(10, 2) NOT NULL,
+    statut      TEXT DEFAULT 'en_attente'
+);
+
+INSERT INTO clients (nom, email, age)
+VALUES ('Alice', 'alice@mail.com', 30),
+       ('Bob',   'bob@mail.com',   25);
+
+UPDATE clients SET age = 31 WHERE nom = 'Alice';
+
+DELETE FROM clients WHERE email = 'bob@mail.com';
+\end{lstlisting}
+
+\begin{piege}
+\texttt{DELETE FROM table} sans clause \texttt{WHERE} supprime \textbf{toutes}
+les lignes. \texttt{UPDATE table SET ...} sans \texttt{WHERE} modifie
+\textbf{toutes} les lignes. Toujours verifier la clause \texttt{WHERE} avant
+d'executer, surtout en production -- idealement, tester d'abord avec un
+\texttt{SELECT} utilisant la meme condition.
+\end{piege}
+
+% =============================================================================
+\section{Selectionner des donnees}
+% =============================================================================
+\texttt{SELECT} est la commande la plus utilisee : elle extrait des lignes
+d'une ou plusieurs tables. L'ordre \emph{logique} d'execution d'une requete
+n'est pas l'ordre dans lequel on l'ecrit -- comprendre cet ordre evite
+beaucoup d'erreurs (par exemple, pourquoi un alias defini dans \texttt{SELECT}
+n'est pas utilisable dans \texttt{WHERE}).
+
+\begin{infobox}{Ordre logique d'execution}
+\texttt{FROM} $\rightarrow$ \texttt{JOIN} $\rightarrow$ \texttt{WHERE}
+$\rightarrow$ \texttt{GROUP BY} $\rightarrow$ \texttt{HAVING} $\rightarrow$
+\texttt{SELECT} $\rightarrow$ \texttt{DISTINCT} $\rightarrow$ \texttt{ORDER BY}
+$\rightarrow$ \texttt{LIMIT}. \texttt{WHERE} filtre les lignes \emph{avant}
+regroupement ; \texttt{HAVING} filtre les groupes \emph{apres}.
+\end{infobox}
+
+\begin{lstlisting}
+SELECT nom, age
+FROM clients
+WHERE age >= 18 AND nom ILIKE 'a%'      -- ILIKE = LIKE insensible a la casse
+ORDER BY age DESC
+LIMIT 10;
+
+-- Colonnes calculees et alias
+SELECT nom, age, age >= 18 AS majeur
+FROM clients;
+
+-- Valeurs distinctes
+SELECT DISTINCT statut FROM commandes;
+
+-- Tester une valeur NULL : jamais avec = ou !=
+SELECT * FROM clients WHERE email IS NOT NULL;
+
+-- Plage de valeurs et liste de valeurs
+SELECT * FROM clients WHERE age BETWEEN 18 AND 65;
+SELECT * FROM commandes WHERE statut IN ('en_attente', 'expediee');
+\end{lstlisting}
+
+\begin{piege}
+\texttt{NULL} represente une valeur \emph{inconnue}, pas zero ni chaine vide.
+\texttt{colonne = NULL} ne renvoie jamais \texttt{TRUE} (meme si la colonne est
+vraiment \texttt{NULL}) : il faut \texttt{IS NULL} ou \texttt{IS NOT NULL}.
+\end{piege}
+
+% =============================================================================
+\section{Jointures}
+% =============================================================================
+Une jointure combine les lignes de deux tables selon une condition de
+correspondance (generalement une cle etrangere). C'est le mecanisme qui
+justifie de \emph{normaliser} les donnees (les repartir dans plusieurs tables
+sans duplication) plutot que de tout stocker dans une seule table plate.
+
+\begin{lstlisting}
+-- INNER JOIN : seulement les lignes qui correspondent des deux cotes
+SELECT c.nom, o.montant
+FROM clients c
+INNER JOIN commandes o ON o.client_id = c.id;
+
+-- LEFT JOIN : toutes les lignes de gauche, meme sans correspondance a droite
+-- (colonnes de droite a NULL si pas de commande)
+SELECT c.nom, o.montant
+FROM clients c
+LEFT JOIN commandes o ON o.client_id = c.id;
+
+-- Clients SANS aucune commande (anti-jointure classique)
+SELECT c.nom
+FROM clients c
+LEFT JOIN commandes o ON o.client_id = c.id
+WHERE o.id IS NULL;
+
+-- FULL OUTER JOIN : union des deux cotes, correspondance ou non
+SELECT c.nom, o.montant
+FROM clients c
+FULL OUTER JOIN commandes o ON o.client_id = c.id;
+
+-- Jointure d'une table sur elle-meme (self-join) : ex. trouver les paires
+-- d'employes qui partagent le meme manager
+SELECT e1.nom AS employe, e2.nom AS collegue
+FROM employes e1
+JOIN employes e2 ON e1.manager_id = e2.manager_id AND e1.id < e2.id;
+\end{lstlisting}
+
+\begin{infobox}{Quelle jointure choisir ?}
+\texttt{INNER JOIN} : uniquement les correspondances (le plus courant).
+\texttt{LEFT JOIN} : tout de la table de gauche, complete par \texttt{NULL} si
+pas de correspondance -- utile pour « trouver ce qui manque ». \texttt{FULL
+OUTER JOIN} : rare, sert a comparer deux ensembles en gardant tout des deux
+cotes.
+\end{infobox}
+
+\begin{piege}
+Filtrer sur la table de droite d'un \texttt{LEFT JOIN} dans le \texttt{WHERE}
+(au lieu du \texttt{ON}) transforme silencieusement le \texttt{LEFT JOIN} en
+\texttt{INNER JOIN} : \texttt{WHERE o.statut = 'payee'} elimine les clients
+sans commande alors qu'on voulait les garder. La condition sur la table jointe
+doit rester dans le \texttt{ON} si on veut conserver les lignes sans
+correspondance.
+\end{piege}
+
+% =============================================================================
+\section{Agregations et regroupement}
+% =============================================================================
+Les fonctions d'agregation (\texttt{COUNT}, \texttt{SUM}, \texttt{AVG},
+\texttt{MIN}, \texttt{MAX}) resument plusieurs lignes en une seule valeur.
+\texttt{GROUP BY} les applique \emph{par groupe} plutot que sur toute la table :
+chaque valeur distincte des colonnes groupees devient une ligne de resultat.
+Toute colonne du \texttt{SELECT} qui n'est pas agregee doit apparaitre dans le
+\texttt{GROUP BY}.
+
+\begin{lstlisting}
+-- Nombre et montant total de commandes par client
+SELECT client_id, COUNT(*) AS nb_commandes, SUM(montant) AS total
+FROM commandes
+GROUP BY client_id;
+
+-- HAVING filtre les groupes (apres agregation) ; WHERE filtre les lignes (avant)
+SELECT client_id, SUM(montant) AS total
+FROM commandes
+WHERE statut = 'payee'          -- filtre les lignes avant regroupement
+GROUP BY client_id
+HAVING SUM(montant) > 100;      -- filtre les groupes apres regroupement
+
+-- COUNT(*) compte les lignes ; COUNT(colonne) ignore les NULL de cette colonne
+SELECT COUNT(*) AS total_lignes, COUNT(email) AS emails_renseignes
+FROM clients;
+\end{lstlisting}
+
+\begin{piege}
+\texttt{WHERE} ne peut pas utiliser un alias defini dans \texttt{SELECT}, ni
+filtrer sur le resultat d'une agregation (\texttt{WHERE COUNT(*) > 1} est
+invalide) : l'agregation n'existe pas encore a ce stade de l'execution logique.
+C'est justement le role de \texttt{HAVING}.
+\end{piege}
+
+% =============================================================================
+\section{Sous-requetes}
+% =============================================================================
+Une sous-requete est une requete imbriquee dans une autre. Elle peut apparaitre
+dans le \texttt{WHERE} (filtrer), dans le \texttt{FROM} (comme une table
+temporaire), ou dans le \texttt{SELECT} (une valeur calculee par ligne).
+
+\begin{lstlisting}
+-- Sous-requete scalaire : clients dont l'age depasse la moyenne
+SELECT nom, age
+FROM clients
+WHERE age > (SELECT AVG(age) FROM clients);
+
+-- Sous-requete avec IN : clients ayant au moins une commande payee
+SELECT nom FROM clients
+WHERE id IN (SELECT client_id FROM commandes WHERE statut = 'payee');
+
+-- EXISTS : souvent plus rapide que IN sur de gros volumes,
+-- s'arrete des la premiere ligne trouvee
+SELECT nom FROM clients c
+WHERE EXISTS (
+    SELECT 1 FROM commandes o
+    WHERE o.client_id = c.id AND o.statut = 'payee'
+);
+
+-- Sous-requete correlee dans le SELECT : montant total par client, en ligne
+SELECT nom,
+       (SELECT SUM(montant) FROM commandes o WHERE o.client_id = c.id) AS total
+FROM clients c;
+\end{lstlisting}
+
+% =============================================================================
+\section{CTE -- Common Table Expressions}
+% =============================================================================
+Une CTE (clause \texttt{WITH}) nomme une sous-requete pour la reutiliser et
+rendre une requete complexe lisible, comme on decoupe un long calcul en
+variables intermediaires. Une CTE \emph{recursive} permet de parcourir des
+structures hierarchiques (arbre, graphe) que \texttt{SQL} ne sait pas
+traverser nativement autrement.
+
+\begin{lstlisting}
+-- CTE simple : lisibilite d'une requete en plusieurs etapes
+WITH ventes_par_client AS (
+    SELECT client_id, SUM(montant) AS total
+    FROM commandes
+    GROUP BY client_id
+)
+SELECT c.nom, v.total
+FROM clients c
+JOIN ventes_par_client v ON v.client_id = c.id
+WHERE v.total > 500;
+
+-- CTE recursive : remonter toute la hierarchie d'un employe (ex. organigramme)
+WITH RECURSIVE hierarchie AS (
+    -- cas de base : l'employe de depart
+    SELECT id, nom, manager_id, 1 AS niveau
+    FROM employes
+    WHERE id = 42
+
+    UNION ALL
+
+    -- cas recursif : le manager du precedent, niveau par niveau
+    SELECT e.id, e.nom, e.manager_id, h.niveau + 1
+    FROM employes e
+    JOIN hierarchie h ON e.id = h.manager_id
+)
+SELECT * FROM hierarchie;
+\end{lstlisting}
+
+\begin{infobox}{Quand utiliser une CTE}
+Des qu'une sous-requete est reutilisee plusieurs fois, ou que la requete
+devient difficile a lire d'un seul bloc. La CTE recursive est le seul moyen
+standard de parcourir un nombre variable de niveaux (organigramme, categories
+imbriquees, graphe de dependances).
+\end{infobox}
+
+% =============================================================================
+\section{Fonctions fenetrees (window functions)}
+% =============================================================================
+Une fonction fenetree calcule une valeur \emph{a travers un ensemble de lignes
+liees a la ligne courante} (la \emph{fenetre}), \textbf{sans} regrouper les
+lignes comme le fait \texttt{GROUP BY} : chaque ligne du resultat reste
+individuelle. C'est l'outil pour repondre a des questions comme « le rang de
+chaque commande », « le cumul depuis le debut », ou « comparer une ligne a la
+precedente ».
+
+\begin{lstlisting}
+-- Classement des commandes par montant, au sein de chaque client
+SELECT client_id, montant,
+       RANK() OVER (PARTITION BY client_id ORDER BY montant DESC) AS rang
+FROM commandes;
+
+-- Cumul progressif (running total) par client, trie par date
+SELECT client_id, montant,
+       SUM(montant) OVER (PARTITION BY client_id ORDER BY id) AS cumul
+FROM commandes;
+
+-- Comparer chaque ligne a la precedente / suivante
+SELECT client_id, montant,
+       LAG(montant)  OVER (PARTITION BY client_id ORDER BY id) AS montant_precedent,
+       LEAD(montant) OVER (PARTITION BY client_id ORDER BY id) AS montant_suivant
+FROM commandes;
+
+-- ROW_NUMBER : numeroter les lignes -- utile pour dedupliquer
+SELECT *
+FROM (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY email ORDER BY id) AS rn
+    FROM clients
+) t
+WHERE rn = 1;    -- garde seulement la premiere ligne de chaque email en double
+\end{lstlisting}
+
+\begin{infobox}{RANK vs DENSE\_RANK vs ROW\_NUMBER}
+Pour des valeurs ex aequo : \texttt{ROW\_NUMBER} attribue toujours un numero
+unique (1, 2, 3...) sans egard aux egalites. \texttt{RANK} laisse un « trou »
+apres une egalite (1, 2, 2, 4...). \texttt{DENSE\_RANK} n'en laisse pas (1, 2,
+2, 3...).
+\end{infobox}
+
+% =============================================================================
+\section{Types de jointure des ensembles}
+% =============================================================================
+\texttt{UNION}, \texttt{INTERSECT} et \texttt{EXCEPT} combinent les
+\emph{resultats} de deux requetes ayant le meme nombre de colonnes et des
+types compatibles -- a ne pas confondre avec les jointures, qui combinent des
+\emph{colonnes}.
+
+\begin{lstlisting}
+-- UNION : combine et supprime les doublons ; UNION ALL les garde (plus rapide)
+SELECT nom FROM clients_actifs
+UNION
+SELECT nom FROM clients_archives;
+
+-- INTERSECT : lignes presentes dans les deux requetes
+SELECT email FROM clients
+INTERSECT
+SELECT email FROM newsletter_abonnes;
+
+-- EXCEPT : lignes de la premiere requete absentes de la seconde
+SELECT email FROM clients
+EXCEPT
+SELECT email FROM newsletter_abonnes;
+\end{lstlisting}
+
+% =============================================================================
+\section{Index et performance}
+% =============================================================================
+Un index est une structure auxiliaire (le plus souvent un arbre B) qui accelere
+la recherche sur une colonne, au prix d'un espace disque supplementaire et d'un
+cout a chaque ecriture (l'index doit etre mis a jour). Sans index, chercher une
+valeur oblige a parcourir la table entiere (\emph{sequential scan}).
+
+\begin{lstlisting}
+-- Index simple sur une colonne souvent filtree
+CREATE INDEX idx_commandes_client_id ON commandes(client_id);
+
+-- Index composite : utile si les requetes filtrent sur les deux colonnes
+-- ensemble (l'ordre des colonnes compte : la premiere doit etre la plus
+-- selective ou la plus souvent utilisee seule)
+CREATE INDEX idx_commandes_client_statut ON commandes(client_id, statut);
+
+-- Verifier ce que le moteur fait reellement : lit-il l'index ou la table entiere ?
+EXPLAIN ANALYZE
+SELECT * FROM commandes WHERE client_id = 42;
+\end{lstlisting}
+
+\begin{infobox}{Quand indexer}
+Indexer les colonnes utilisees dans \texttt{WHERE}, \texttt{JOIN ... ON} et
+\texttt{ORDER BY} sur de grandes tables. Les cles primaires et (souvent) les
+cles etrangeres sont deja indexees automatiquement par le SGBD (a verifier :
+sur PostgreSQL, une cle etrangere n'est \textbf{pas} indexee automatiquement,
+contrairement a la cle primaire).
+\end{infobox}
+
+\begin{piege}
+Un index existe mais n'est pas utilise si la requete applique une fonction sur
+la colonne indexee (\texttt{WHERE LOWER(email) = ...} n'utilise pas un index
+simple sur \texttt{email}) ou si le filtre porte sur trop peu de lignes
+distinctes (un index sur une colonne booleenne est rarement utile). Trop
+d'index ralentissent aussi les ecritures (\texttt{INSERT}/\texttt{UPDATE}) : ce
+n'est pas gratuit, il faut indexer avec intention.
+\end{piege}
+
+% =============================================================================
+\section{Transactions}
+% =============================================================================
+Une transaction regroupe plusieurs operations en une seule unite
+\emph{atomique} : soit toutes reussissent (\texttt{COMMIT}), soit aucune n'est
+appliquee (\texttt{ROLLBACK}). Indispensable des qu'une operation logique
+touche plusieurs tables -- par exemple, debiter un compte et en crediter un
+autre ne doit jamais s'arreter a mi-chemin.
+
+\begin{lstlisting}
+BEGIN;
+
+UPDATE comptes SET solde = solde - 100 WHERE id = 1;
+UPDATE comptes SET solde = solde + 100 WHERE id = 2;
+
+-- Si tout s'est bien passe :
+COMMIT;
+
+-- Si une verification echoue (ex. solde negatif) :
+-- ROLLBACK;
+\end{lstlisting}
+
+\begin{infobox}{Proprietes ACID}
+\textbf{A}tomicite (tout ou rien) -- \textbf{C}oherence (les contraintes
+restent respectees) -- \textbf{I}solation (les transactions concurrentes ne se
+perturbent pas) -- \textbf{D}urabilite (une fois validee, une transaction
+survit meme a une panne).
+\end{infobox}
+
+% =============================================================================
+\section{Erreurs et pieges frequents}
+% =============================================================================
+\renewcommand{\arraystretch}{1.35}
+\begin{longtable}{>{\raggedright\arraybackslash}p{4.6cm}
+                  >{\raggedright\arraybackslash}p{8.2cm}}
+\rowcolor{primary}
+\textbf{\color{white}Piege} & \textbf{\color{white}Explication} \\
+\hline
+\texttt{= NULL} au lieu de \texttt{IS NULL} & Ne renvoie jamais \texttt{TRUE} ;
+utiliser \texttt{IS NULL} / \texttt{IS NOT NULL}. \\
+\texttt{WHERE} sur une table jointe en \texttt{LEFT JOIN} & Transforme
+silencieusement le \texttt{LEFT JOIN} en \texttt{INNER JOIN} ; filtrer dans le
+\texttt{ON}. \\
+Colonne non agregee absente du \texttt{GROUP BY} & Erreur (Postgres) ou valeur
+arbitraire (MySQL en mode permissif). \\
+\texttt{HAVING} vs \texttt{WHERE} & \texttt{WHERE} filtre avant regroupement,
+\texttt{HAVING} apres. \\
+\texttt{DELETE}/\texttt{UPDATE} sans \texttt{WHERE} & Affecte toutes les
+lignes de la table. \\
+\texttt{SELECT *} en production & Casse si les colonnes changent ; ramene des
+donnees inutiles ; nommer les colonnes explicitement. \\
+Comparer des types incompatibles & \texttt{'10' = 10} peut fonctionner par
+conversion implicite mais degrade les performances (l'index n'est plus
+utilisable) et masque des bugs. \\
+Oublier les fuseaux horaires & Preferer \texttt{TIMESTAMPTZ} a
+\texttt{TIMESTAMP} des que l'application a des utilisateurs dans plusieurs
+fuseaux. \\
+\end{longtable}
+
+% =============================================================================
+\section{Fiche recapitulative}
+% =============================================================================
+\renewcommand{\arraystretch}{1.35}
+\begin{longtable}{>{\raggedright\arraybackslash}p{4.5cm}
+                  >{\raggedright\arraybackslash}p{8.3cm}}
+\rowcolor{primary}
+\textbf{\color{white}Concept} & \textbf{\color{white}A retenir} \\
+\hline
+Ordre logique & \texttt{FROM > JOIN > WHERE > GROUP BY > HAVING > SELECT >
+ORDER BY > LIMIT}. \\
+\texttt{INNER} vs \texttt{LEFT JOIN} & \texttt{INNER} = correspondances
+uniquement ; \texttt{LEFT} = tout de la table de gauche + \texttt{NULL}. \\
+\texttt{WHERE} vs \texttt{HAVING} & Avant regroupement vs apres regroupement. \\
+\texttt{IN} vs \texttt{EXISTS} & \texttt{EXISTS} s'arrete des la premiere
+correspondance, souvent plus rapide sur de gros volumes. \\
+CTE (\texttt{WITH}) & Nomme une sous-requete ; \texttt{WITH RECURSIVE} pour les
+hierarchies. \\
+Fonctions fenetrees & \texttt{OVER (PARTITION BY ... ORDER BY ...)} : calcule
+sans regrouper les lignes. \\
+Index & Accelere la lecture, ralentit l'ecriture ; verifier avec
+\texttt{EXPLAIN ANALYZE}. \\
+Transaction & \texttt{BEGIN / COMMIT / ROLLBACK} ; proprietes ACID. \\
+\texttt{NULL} & Valeur inconnue ; toujours \texttt{IS NULL}, jamais \texttt{=
+NULL}. \\
+\end{longtable}
+
+\vspace{0.6cm}
+\begin{infobox}{Methode pour ecrire une requete complexe}
+\begin{enumerate}[leftmargin=*,itemsep=2pt,topsep=2pt]
+  \item Identifier les tables necessaires et comment elles se relient (cles).
+  \item Ecrire d'abord le \texttt{FROM}/\texttt{JOIN}, verifier avec
+  \texttt{SELECT *} que les lignes obtenues sont les bonnes.
+  \item Ajouter les filtres (\texttt{WHERE}), puis le regroupement
+  (\texttt{GROUP BY}/\texttt{HAVING}) si necessaire.
+  \item Ne selectionner les colonnes finales et trier (\texttt{ORDER BY}) qu'en
+  dernier.
+  \item Sur une grosse table, verifier le plan d'execution
+  (\texttt{EXPLAIN ANALYZE}) avant de considerer la requete terminee.
+\end{enumerate}
+\end{infobox}
+
+\end{document}

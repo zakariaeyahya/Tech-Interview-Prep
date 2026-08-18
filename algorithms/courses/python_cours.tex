@@ -207,6 +207,70 @@ Les chaines sont \emph{immuables} : \texttt{s[0] = "X"} leve
 \texttt{TypeError}. Il faut reconstruire une nouvelle chaine.
 \end{piege}
 
+\subsection{Astuces de manipulation}
+Au-dela des bases, une poignee de methodes reviennent sans cesse des qu'on doit
+\emph{nettoyer}, \emph{aligner} ou \emph{analyser} du texte. Les connaitre evite
+de reecrire a la main des boucles que la bibliotheque standard fait deja tres
+bien.
+
+\begin{lstlisting}
+# Nettoyage : strip enleve les caracteres indesirables aux extremites
+"  bonjour  ".strip()          # 'bonjour'   (espaces des deux cotes)
+"##titre##".strip("#")         # 'titre'     (caractere precis)
+"  bonjour".lstrip()           # 'bonjour'   (seulement a gauche)
+"bonjour  ".rstrip()           # 'bonjour'   (seulement a droite)
+
+# Alignement / padding : utile pour formater un affichage tabulaire
+"7".zfill(3)                   # '007'  (complete avec des zeros a gauche)
+"7".rjust(3, "0")              # '007'  (equivalent, plus general)
+"ok".ljust(5, ".")             # 'ok...' (aligne a gauche)
+"ok".center(6, "-")            # '-ok---' (centre)
+
+# Recherche et tests
+"algorithme".startswith("algo")   # True
+"algorithme".endswith("me")       # True
+"algorithme".find("go")           # 2   (-1 si absent, ne leve pas d'erreur)
+"algorithme".index("go")          # 2   (leve ValueError si absent)
+"abc123".isalpha()                # False (contient des chiffres)
+"abc123".isalnum()                # True  (lettres + chiffres uniquement)
+
+# Remplacement multiple d'un coup avec translate (rapide, sans boucle)
+table = str.maketrans("ae", "AE")     # a->A, e->E
+"algorithme".translate(table)         # 'AlgorithmE'
+
+# split avec limite, et rsplit pour couper depuis la droite
+"a=b=c".split("=", 1)             # ['a', 'b=c']       (une seule coupe)
+"a/b/c.txt".rsplit("/", 1)        # ['a/b', 'c.txt']   (coupe depuis la fin)
+"  a   b  c ".split()             # ['a', 'b', 'c']    (split() sans argument
+                                   # ignore les espaces multiples/en trop)
+
+# f-strings avancees : formater sans concatener
+prix = 1234.5
+f"{prix:,.2f}"          # '1,234.50'  (separateur de milliers, 2 decimales)
+f"{prix:>10.1f}"        # '    1234.5' (aligne a droite sur 10 caracteres)
+nom = "Alice"
+f"{nom=}"                # "nom='Alice'" (affiche aussi le nom de variable, debug rapide)
+\end{lstlisting}
+
+\begin{infobox}{Compter des caracteres : le reflexe \texttt{Counter}}
+Plutot que d'ecrire une boucle avec un dictionnaire pour compter les occurrences
+de chaque caractere, \texttt{collections.Counter} le fait en une ligne et offre
+directement les caracteres les plus frequents.
+\begin{lstlisting}
+from collections import Counter
+
+freq = Counter("mississippi")      # Counter({'i': 4, 's': 4, 'p': 2, 'm': 1})
+freq.most_common(2)                # [('i', 4), ('s', 4)]  (les 2 plus frequents)
+freq["i"]                          # 4  (0 si absent, jamais de KeyError)
+\end{lstlisting}
+\end{infobox}
+
+\begin{piege}
+\texttt{"a" in "banane"} teste une \emph{sous-chaine}, pas un caractere isole
+uniquement : \texttt{"an" in "banane"} vaut aussi \texttt{True}. Pratique, mais
+ne pas confondre avec un test d'egalite caractere par caractere.
+\end{piege}
+
 % =============================================================================
 \section{Structures de donnees}
 % =============================================================================
@@ -261,6 +325,59 @@ age["Zoe"] = 22         # ajout
 for cle, val in age.items():
     print(cle, val)
 \end{lstlisting}
+
+\subsubsection*{Astuces de manipulation}
+Le dictionnaire est la structure la plus polyvalente de Python : elle sert a la
+fois de \emph{table de correspondance}, de \emph{compteur} et d'\emph{index}.
+Quelques idiomes reviennent dans presque tous les problemes d'algorithmique.
+
+\begin{lstlisting}
+# Dict comprehension : construire un dict en une ligne, comme pour une liste
+carres = {x: x*x for x in range(5)}          # {0:0, 1:1, 2:4, 3:9, 4:16}
+mots = ["chat", "chien", "oiseau"]
+longueurs = {m: len(m) for m in mots}        # {'chat':4, 'chien':5, 'oiseau':7}
+
+# setdefault : recupere une cle, ou l'insere avec une valeur par defaut
+graphe = {}
+graphe.setdefault("A", []).append("B")       # cree [] si absent, puis append
+graphe.setdefault("A", []).append("C")       # {'A': ['B', 'C']}
+
+# defaultdict : evite setdefault repete, la valeur par defaut est automatique
+from collections import defaultdict
+groupes = defaultdict(list)
+for mot in ["chat", "chien", "chameau"]:
+    groupes[mot[0]].append(mot)              # pas besoin de tester si 'c' existe
+# {'c': ['chat', 'chien', 'chameau']}
+
+# Fusionner deux dicts (Python 3.9+) : | cree un nouveau dict, |= modifie en place
+defauts = {"theme": "clair", "langue": "fr"}
+utilisateur = {"langue": "en"}
+config = defauts | utilisateur               # {'theme':'clair', 'langue':'en'}
+                                              # (les cles de droite ecrasent celles de gauche)
+
+# Parcourir cles / valeurs / paires
+list(age.keys())        # ['Alice', 'Bob', 'Zoe']
+list(age.values())      # [30, 25, 22]
+list(age.items())       # [('Alice', 30), ('Bob', 25), ('Zoe', 22)]
+
+# Trier un dict par valeur (frequent : classement par score, par frequence...)
+scores = {"Alice": 90, "Bob": 75, "Zoe": 88}
+sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
+# [('Alice', 90), ('Zoe', 88), ('Bob', 75)]  (trie decroissant sur la valeur)
+
+# Inverser un dict (valeur -> cle), valable seulement si les valeurs sont uniques
+{v: k for k, v in age.items()}
+
+# Supprimer une cle sans planter si elle est absente
+age.pop("Inconnu", None)     # None si absente ; pas de KeyError
+\end{lstlisting}
+
+\begin{piege}
+Une cle de dictionnaire doit etre \emph{immuable} (\texttt{hashable}) : \texttt{str},
+\texttt{int}, \texttt{tuple} conviennent, mais une \texttt{list} comme cle leve
+\texttt{TypeError: unhashable type}. Utilise un \texttt{tuple} si tu as besoin
+d'une cle composee, par exemple \texttt{grille[(x, y)] = valeur}.
+\end{piege}
 
 \subsection{Ensemble (set) -- valeurs uniques}
 Un ensemble ne contient jamais de doublon et n'a pas d'ordre. On l'emploie pour

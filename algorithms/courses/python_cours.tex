@@ -441,13 +441,62 @@ sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
 
 # Supprimer une cle sans planter si elle est absente
 age.pop("Inconnu", None)     # None si absente ; pas de KeyError
+
+# Tester la presence d'une cle : in teste les CLES, jamais les valeurs
+"Alice" in age              # True   (test rapide, O(1) moyen)
+30 in age                   # False  (30 est une valeur, pas une cle !)
+30 in age.values()          # True   (il faut explicitement .values())
+
+# Construire un dict a partir de deux listes paralleles
+noms = ["Alice", "Bob", "Zoe"]
+ages = [30, 25, 22]
+dict(zip(noms, ages))        # {'Alice': 30, 'Bob': 25, 'Zoe': 22}
+
+# update() : fusionne un autre dict (ou des paires cle=valeur) en place
+age.update({"Chris": 40})            # ajoute/ecrase des cles depuis un dict
+age.update(David=28, Eve=33)         # ou directement en arguments nommes
+
+# Comparer deux dicts : == compare cles ET valeurs, peu importe l'ordre
+{"a": 1, "b": 2} == {"b": 2, "a": 1}     # True
+
+# min / max sur les items : trouver la cle avec la plus petite/grande valeur
+scores = {"Alice": 90, "Bob": 75, "Zoe": 88}
+min(scores, key=scores.get)          # 'Bob'   (cle dont la valeur est minimale)
+max(scores.items(), key=lambda kv: kv[1])   # ('Alice', 90)
 \end{lstlisting}
+
+\begin{infobox}{Compter avec un dict : le reflexe \texttt{Counter}}
+Comme pour les chaines, compter des occurrences dans une liste ou un
+iterable quelconque se fait en une ligne avec \texttt{collections.Counter}
+plutot qu'avec une boucle manuelle et \texttt{get(cle, 0) + 1}.
+\begin{lstlisting}
+from collections import Counter
+
+notes = ["A", "B", "A", "C", "A", "B"]
+compte = Counter(notes)             # Counter({'A': 3, 'B': 2, 'C': 1})
+compte.most_common(1)               # [('A', 3)]  (le plus frequent)
+
+# Counter supporte les operations arithmetiques entre compteurs
+c1 = Counter(["a", "b", "b"])
+c2 = Counter(["b", "c"])
+c1 + c2                             # Counter({'b': 3, 'a': 1, 'c': 1})  (addition)
+c1 - c2                             # Counter({'a': 1, 'b': 1})          (soustraction, sans negatifs)
+\end{lstlisting}
+\end{infobox}
 
 \begin{piege}
 Une cle de dictionnaire doit etre \emph{immuable} (\texttt{hashable}) : \texttt{str},
 \texttt{int}, \texttt{tuple} conviennent, mais une \texttt{list} comme cle leve
 \texttt{TypeError: unhashable type}. Utilise un \texttt{tuple} si tu as besoin
 d'une cle composee, par exemple \texttt{grille[(x, y)] = valeur}.
+\end{piege}
+
+\begin{piege}
+Modifier un dictionnaire (ajouter ou supprimer une cle) \textbf{pendant} qu'on
+le parcourt avec \texttt{for cle in dico} leve \texttt{RuntimeError: dictionary
+changed size during iteration}. Il faut iterer sur une copie des cles
+(\texttt{for cle in list(dico.keys())}) si des suppressions sont necessaires
+pendant la boucle.
 \end{piege}
 
 \subsection{Ensemble (set) -- valeurs uniques}

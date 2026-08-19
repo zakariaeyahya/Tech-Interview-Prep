@@ -296,6 +296,77 @@ nums[1:3]           # [2, 3]        (slicing)
 carres = [x*x for x in range(5)]    # comprehension : [0,1,4,9,16]
 \end{lstlisting}
 
+\subsubsection*{Astuces de manipulation}
+Comme pour les chaines, une liste se manipule rarement avec de longues boucles
+manuelles : le slicing et une poignee de methodes couvrent la grande majorite
+des besoins, plus vite et plus lisiblement.
+
+\begin{lstlisting}
+nums = [10, 20, 30, 40, 50]
+
+# Slicing avance : [debut:fin:pas]
+nums[::-1]           # [50, 40, 30, 20, 10]   inverser sans modifier l'original
+nums[::2]             # [10, 30, 50]            un element sur deux
+nums[1:-1]            # [20, 30, 40]            tout sauf le premier et le dernier
+nums[:3]              # [10, 20, 30]            les 3 premiers
+nums[-3:]             # [30, 40, 50]             les 3 derniers
+
+# Ajouter / retirer : append vs extend, insert, remove, pop
+nums.append(60)        # ajoute un seul element a la fin       : [...,50,60]
+nums.extend([70, 80])  # ajoute plusieurs elements a la fin     : [...,60,70,80]
+nums.insert(0, 5)      # insere a une position precise          : [5,10,...]
+nums.remove(30)        # retire la PREMIERE occurrence de 30 (ValueError si absent)
+dernier = nums.pop()    # retire et renvoie le dernier element
+premier = nums.pop(0)   # retire et renvoie l'element a l'index 0
+
+\end{lstlisting}
+
+\begin{piege}
+\texttt{liste.append([1, 2])} ajoute la \emph{liste entiere} comme un seul
+element imbrique (\texttt{[..., [1, 2]]}), alors que
+\texttt{liste.extend([1, 2])} ajoute chaque element separement
+(\texttt{[..., 1, 2]}). Confondre les deux est une source frequente de bugs
+silencieux -- la liste ne leve pas d'erreur, elle a juste une structure
+inattendue.
+\end{piege}
+
+\begin{lstlisting}
+# Tri : sort() modifie sur place et renvoie None ; sorted() renvoie une copie
+nums.sort(reverse=True)             # decroissant, sur place
+copie_triee = sorted(nums)          # laisse nums intact
+
+# Trier avec une cle (key) : le critere de tri, pas la valeur triee elle-meme
+mots = ["kiwi", "fig", "banane"]
+sorted(mots, key=len)               # ['fig', 'kiwi', 'banane']  (par longueur)
+personnes = [("Bob", 25), ("Alice", 30)]
+sorted(personnes, key=lambda p: p[1])   # trie par age (2e element du tuple)
+
+# Parcours combine : enumerate (index + valeur) et zip (plusieurs listes ensemble)
+for i, v in enumerate(nums):
+    print(i, v)
+noms = ["a", "b"]; ages = [1, 2]
+list(zip(noms, ages))               # [('a', 1), ('b', 2)]
+
+# Aplatir une liste de listes (une ligne, via comprehension imbriquee)
+matrice = [[1, 2], [3, 4], [5]]
+plat = [x for ligne in matrice for x in ligne]     # [1, 2, 3, 4, 5]
+
+# Fonctions utiles sur toute la liste
+sum(nums); min(nums); max(nums); len(nums)
+nums.count(10)          # nombre d'occurrences de 10
+nums.index(20)           # index de la premiere occurrence de 20 (ValueError si absent)
+20 in nums                # test d'appartenance (O(n) sur une liste, contrairement au set)
+\end{lstlisting}
+
+\begin{infobox}{Copie superficielle vs copie profonde}
+\texttt{copie = liste} ne copie \textbf{rien} : les deux noms pointent vers le
+\emph{meme} objet, modifier l'un modifie l'autre. \texttt{copie =
+liste[:]} ou \texttt{copie = liste.copy()} cree une vraie nouvelle liste, mais
+en \emph{copie superficielle} : si les elements sont eux-memes des listes
+(matrice), les sous-listes restent partagees. Pour une copie totalement
+independante, utiliser \texttt{copy.deepcopy(liste)}.
+\end{infobox}
+
 \subsection{Tuple -- ordonne, immuable}
 Le tuple ressemble a une liste mais ne peut plus changer une fois cree. On
 l'utilise pour des donnees qui vont ensemble et ne doivent pas bouger (un point

@@ -328,6 +328,51 @@ SELECT nom, age,
 FROM clients;
 \end{lstlisting}
 
+\subsubsection*{Filtrer sur le premier ou le dernier caractere}
+\texttt{LEFT}, \texttt{RIGHT} et \texttt{LIKE} ne servent pas qu'a afficher une
+colonne transformee : places dans un \texttt{WHERE} ou un \texttt{CASE WHEN},
+ils permettent de \emph{filtrer} ou de \emph{brancher} une requete selon le
+debut ou la fin d'une chaine.
+
+\begin{lstlisting}
+-- Filtrer sur le PREMIER caractere (ou les n premiers)
+SELECT * FROM clients WHERE LEFT(nom, 1) = 'A';        -- commence par 'A'
+SELECT * FROM clients WHERE nom LIKE 'A%';              -- equivalent, souvent
+                                                          -- plus lisible et
+                                                          -- mieux optimise
+-- Filtrer sur le DERNIER caractere (ou les n derniers)
+SELECT * FROM fichiers WHERE RIGHT(nom, 4) = '.pdf';    -- se termine par '.pdf'
+SELECT * FROM fichiers WHERE nom LIKE '%.pdf';           -- equivalent avec LIKE
+
+-- Un caractere precis n'importe ou dans la chaine : POSITION ou LIKE avec %
+SELECT * FROM clients WHERE POSITION('@' IN email) > 0;  -- contient un '@'
+SELECT * FROM clients WHERE email LIKE '%@%';             -- equivalent
+
+-- Combiner debut ET fin dans une seule condition
+SELECT * FROM references
+WHERE LEFT(code, 2) = 'FR' AND RIGHT(code, 1) = 'X';
+
+-- Brancher un calcul selon le premier caractere (ex. categoriser un code postal)
+SELECT ville, code_postal,
+       CASE
+           WHEN LEFT(code_postal, 2) = '75' THEN 'Paris'
+           WHEN LEFT(code_postal, 2) IN ('92', '93', '94') THEN 'Petite couronne'
+           ELSE 'Autre'
+       END AS zone
+FROM adresses;
+\end{lstlisting}
+
+\begin{infobox}{\texttt{LIKE} vs \texttt{LEFT}/\texttt{RIGHT} pour filtrer}
+Pour un test de prefixe ou suffixe simple, \texttt{colonne LIKE 'A\%'} est en
+general prefere a \texttt{LEFT(colonne, 1) = 'A'} : sur une colonne
+\textbf{indexee}, le moteur peut utiliser l'index avec un motif \texttt{LIKE}
+qui commence par un prefixe fixe (\texttt{'A\%'}), alors qu'appliquer une
+fonction comme \texttt{LEFT} sur la colonne empeche generalement l'index
+d'etre utilise (voir le piege sur les index, section 10). \texttt{LIKE
+'\%A'} (suffixe) ne peut de toute facon pas utiliser un index B-tree standard,
+qu'on passe par \texttt{LIKE} ou par \texttt{RIGHT}.
+\end{infobox}
+
 \begin{infobox}{Alignement des positions}
 En SQL, les positions de chaine commencent a \texttt{1} (pas \texttt{0} comme
 en Python). \texttt{LEFT(s, n)} et \texttt{RIGHT(s, n)} avec un \texttt{n}
@@ -400,6 +445,77 @@ doit rester dans le \texttt{ON} si on veut conserver les lignes sans
 correspondance.
 \end{piege}
 
+\subsection{Plusieurs jointures a la fois}
+Une requete peut enchainer autant de \texttt{JOIN} que necessaire : chaque
+nouvelle jointure s'applique au resultat \emph{deja construit} par les
+precedentes, pas seulement a la premiere table. On peut melanger les types de
+jointure (\texttt{INNER}, \texttt{LEFT}...) selon ce que chaque table doit
+apporter.
+
+\begin{lstlisting}
+-- 3 tables : clients -> commandes -> lignes_commande -> produits
+SELECT c.nom, p.nom AS produit, l.quantite
+FROM clients c
+JOIN commandes o        ON o.client_id = c.id
+JOIN lignes_commande l  ON l.commande_id = o.id
+JOIN produits p         ON p.id = l.produit_id;
+
+-- Melanger INNER et LEFT : garder TOUS les clients, mais seulement les
+-- commandes payees quand elles existent
+SELECT c.nom, o.montant
+FROM clients c
+LEFT JOIN commandes o ON o.client_id = c.id AND o.statut = 'payee';
+-- (la condition sur o est dans le ON, pas le WHERE : voir le piege ci-dessus)
+
+-- Agreger APRES plusieurs jointures : total depense par client, produits inclus
+SELECT c.nom, SUM(l.quantite * p.prix) AS total
+FROM clients c
+JOIN commandes o        ON o.client_id = c.id
+JOIN lignes_commande l  ON l.commande_id = o.id
+JOIN produits p         ON p.id = l.produit_id
+GROUP BY c.nom;
+\end{lstlisting}
+
+\begin{piege}
+Enchainer des jointures \emph{one-to-many} (une commande a plusieurs lignes,
+une ligne peut correspondre a plusieurs produits...) \textbf{multiplie} les
+lignes du resultat : un client avec 2 commandes de 3 lignes chacune apparait
+6 fois. Appliquer directement \texttt{SUM(o.montant)} sur ce resultat compte
+donc \texttt{o.montant} plusieurs fois et gonfle le total -- c'est l'erreur la
+plus frequente des requetes a plusieurs jointures. Deux solutions : agreger
+\emph{avant} de joindre (dans une sous-requete ou une CTE qui resume la table
+« multiple » a une ligne par cle), ou utiliser \texttt{COUNT(DISTINCT ...)} /
+\texttt{SUM(DISTINCT ...)} avec prudence (fonctionne seulement si les valeurs
+dupliquees sont identiques).
+\end{piege}
+
+\begin{lstlisting}
+-- Mauvais : le montant de chaque commande est compte une fois par ligne produit
+SELECT c.nom, SUM(o.montant) AS total    -- FAUX si une commande a plusieurs lignes
+FROM clients c
+JOIN commandes o        ON o.client_id = c.id
+JOIN lignes_commande l  ON l.commande_id = o.id
+GROUP BY c.nom;
+
+-- Correct : agreger le montant par commande AVANT de joindre les lignes de detail
+WITH commandes_resumees AS (
+    SELECT client_id, SUM(montant) AS total
+    FROM commandes
+    GROUP BY client_id
+)
+SELECT c.nom, r.total
+FROM clients c
+JOIN commandes_resumees r ON r.client_id = c.id;
+\end{lstlisting}
+
+\begin{infobox}{Methode pour une requete a plusieurs jointures}
+Ajouter les tables une a la fois : apres chaque \texttt{JOIN}, verifier avec
+\texttt{SELECT *} et \texttt{COUNT(*)} que le nombre de lignes obtenu est
+celui attendu, \emph{avant} d'empiler l'agregation ou la jointure suivante.
+C'est la seule facon fiable de reperer une multiplication de lignes avant
+qu'elle ne fausse un \texttt{SUM}/\texttt{COUNT} final.
+\end{infobox}
+
 % =============================================================================
 \section{Agregations et regroupement}
 % =============================================================================
@@ -434,6 +550,54 @@ filtrer sur le resultat d'une agregation (\texttt{WHERE COUNT(*) > 1} est
 invalide) : l'agregation n'existe pas encore a ce stade de l'execution logique.
 C'est justement le role de \texttt{HAVING}.
 \end{piege}
+
+\subsection{Arrondir les nombres}
+Une agregation comme \texttt{AVG} produit souvent un nombre avec beaucoup de
+decimales : il faut l'arrondir explicitement pour un affichage propre (un
+prix, un pourcentage, une moyenne). SQL offre plusieurs fonctions selon le
+comportement voulu -- arrondir au plus proche, toujours arrondir vers le haut,
+ou simplement tronquer sans arrondir.
+
+\begin{lstlisting}
+-- ROUND(valeur, decimales) : arrondi classique au plus proche
+SELECT ROUND(19.855, 2);     -- 19.86
+SELECT ROUND(19.854, 2);     -- 19.85
+SELECT ROUND(1234.5, -2);    -- 1200   (decimales negatives : arrondit avant la virgule)
+
+-- CEIL / CEILING : arrondit toujours vers le haut (utile pour de la pagination)
+SELECT CEIL(4.1);            -- 5
+SELECT CEIL(nb_articles / 10.0) AS nb_pages FROM catalogue;   -- pages necessaires
+
+-- FLOOR : arrondit toujours vers le bas
+SELECT FLOOR(4.9);           -- 4
+
+-- TRUNC : coupe les decimales sans arrondir (contrairement a ROUND)
+SELECT TRUNC(19.999, 2);     -- 19.99   (pas 20.00 : ne regarde pas la decimale suivante)
+
+-- Combine a une agregation : moyenne lisible a 2 decimales
+SELECT client_id, ROUND(AVG(montant), 2) AS moyenne_commande
+FROM commandes
+GROUP BY client_id;
+\end{lstlisting}
+
+\begin{piege}
+Diviser deux entiers en SQL effectue une \textbf{division entiere} qui tronque
+le resultat, comme en Python avec \texttt{//} : \texttt{SELECT 7 / 2} donne
+\texttt{3}, pas \texttt{3.5} (sur PostgreSQL comme sur la plupart des moteurs,
+si les deux operandes sont de type \texttt{INTEGER}). Il faut forcer un type
+decimal avant la division : \texttt{7 / 2.0}, \texttt{7::NUMERIC / 2}, ou
+\texttt{CAST(7 AS NUMERIC) / 2} donnent bien \texttt{3.5}. C'est une source
+frequente de resultats faux dans des calculs de pourcentage ou de moyenne.
+\end{piege}
+
+\begin{infobox}{Rappel : arrondi et stockage vont ensemble}
+Arrondir a l'affichage ne suffit pas si la colonne est deja stockee en
+\texttt{FLOAT}/\texttt{REAL} (virgule flottante binaire, sujette a des
+erreurs d'arrondi). Pour de l'argent, la colonne elle-meme doit etre en
+\texttt{NUMERIC(10, 2)} des la creation de la table (voir la section Types de
+variables) : arrondir un \texttt{FLOAT} avec \texttt{ROUND} au moment de la
+requete ne rattrape pas une imprecision deja introduite au stockage.
+\end{infobox}
 
 % =============================================================================
 \section{Sous-requetes}

@@ -564,6 +564,56 @@ else:
 produit \texttt{0,1,2,3,4}.
 \end{piege}
 
+\subsection{Boucler sur chaque structure}
+La boucle \texttt{for} s'adapte a ce qu'elle parcourt : une \texttt{list}
+donne ses elements dans l'ordre, une \texttt{str} donne ses caracteres un a
+un, un \texttt{dict} donne ses \emph{cles} par defaut, et un \texttt{set} donne
+ses elements dans un ordre \textbf{non garanti}. Savoir ce que \texttt{for}
+donne exactement pour chaque structure evite des erreurs de logique
+silencieuses.
+
+\begin{lstlisting}
+# Liste : parcours direct des elements, ou avec index via enumerate
+fruits = ["pomme", "poire", "kiwi"]
+for f in fruits:
+    print(f)
+for i, f in enumerate(fruits):
+    print(i, f)                     # index + valeur
+
+# Chaine : parcours caractere par caractere
+for c in "abc":
+    print(c)                        # 'a' puis 'b' puis 'c'
+
+# Dictionnaire : par defaut, for parcourt les CLES (pas les valeurs)
+age = {"Alice": 30, "Bob": 25}
+for cle in age:                     # equivalent a for cle in age.keys()
+    print(cle)
+for cle, valeur in age.items():     # la forme la plus utile : cle ET valeur
+    print(cle, valeur)
+for valeur in age.values():         # seulement les valeurs
+    print(valeur)
+
+# Set : meme syntaxe que pour une liste, mais l'ORDRE n'est pas garanti
+vus = {3, 1, 2}
+for x in vus:
+    print(x)                        # peut sortir 1, 2, 3 dans un ordre quelconque
+
+# Parcourir plusieurs structures en parallele avec zip
+noms = ["Alice", "Bob"]
+ages = [30, 25]
+for nom, a in zip(noms, ages):
+    print(nom, a)
+\end{lstlisting}
+
+\begin{piege}
+\texttt{for x in dico} donne les \textbf{cles}, jamais les valeurs -- une
+erreur frequente est de croire que \texttt{x} contient la valeur. Pour les
+deux a la fois, utiliser \texttt{dico.items()}. De meme, un \texttt{set}
+n'ayant pas d'ordre garanti, ne jamais ecrire de code qui suppose un ordre
+particulier de parcours (par exemple, comparer deux boucles sur le meme set
+"element par element" a chaque execution).
+\end{piege}
+
 % =============================================================================
 \section{Fonctions}
 % =============================================================================

@@ -176,6 +176,48 @@ SELECT CAST('42' AS INTEGER);
 SELECT '42'::INTEGER;              -- syntaxe raccourcie propre a PostgreSQL
 \end{lstlisting}
 
+\subsection{Convertir un type avec CAST}
+\texttt{CAST(valeur AS type)} force la conversion explicite d'une valeur vers
+un autre type -- l'equivalent SQL de \texttt{int(...)}/\texttt{str(...)} en
+Python. Utile des qu'une colonne texte contient en realite des nombres ou des
+dates (import brut, champ \texttt{TEXT} mal type a l'origine), ou pour
+garantir un type precis dans un calcul (voir le piege sur la division
+entiere, section 5).
+
+\begin{lstlisting}
+-- Texte vers nombre, et nombre vers texte
+SELECT CAST('123' AS INTEGER);          -- 123
+SELECT CAST(19.99 AS TEXT);             -- '19.99'
+SELECT '19.99'::NUMERIC;                -- 19.99  (syntaxe :: PostgreSQL)
+
+-- Texte vers date, tres courant sur des donnees importees
+SELECT CAST('2024-03-15' AS DATE);
+SELECT '2024-03-15'::DATE + 7;          -- arithmetique de dates apres conversion
+
+-- Forcer un type avant une division pour eviter la division entiere
+SELECT CAST(total AS NUMERIC) / nb_articles AS moyenne
+FROM commandes;
+
+-- CAST dans une condition : comparer une colonne TEXT mal typee a un nombre
+SELECT * FROM logs WHERE CAST(code_erreur AS INTEGER) > 400;
+
+-- CAST implicite silencieux : PostgreSQL convertit parfois sans CAST explicite
+SELECT '10' = 10;    -- fonctionne (conversion implicite), mais a eviter :
+                      -- moins lisible et empeche souvent l'usage d'un index
+\end{lstlisting}
+
+\begin{piege}
+\texttt{CAST} \textbf{echoue} (leve une erreur qui interrompt la requete) si la
+valeur n'est pas convertible : \texttt{CAST('abc' AS INTEGER)} plante toute la
+requete, meme si une seule ligne sur un million pose probleme. Sur PostgreSQL,
+utiliser \texttt{value::type} n'echappe pas a ce risque (meme comportement que
+\texttt{CAST}). Pour convertir sans faire planter la requete entiere sur des
+donnees sales, filtrer au prealable les valeurs invalides (par exemple avec une
+expression reguliere via \texttt{\textasciitilde} ou \texttt{SIMILAR TO}), ou
+utiliser une fonction de conversion tolerante specifique au moteur si elle
+existe.
+\end{piege}
+
 \begin{infobox}{NUMERIC vs FLOAT}
 \texttt{NUMERIC} stocke une valeur \emph{exacte} (aucune erreur d'arrondi) mais
 est plus lent ; c'est le choix par defaut pour de l'argent. \texttt{REAL}/

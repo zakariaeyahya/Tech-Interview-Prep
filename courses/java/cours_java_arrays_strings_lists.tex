@@ -1,0 +1,568 @@
+% =============================================================================
+%  cours_java_arrays_strings_lists.tex
+%  Cours Java -- Arrays, Strings, List et Java Collections Framework
+%  (interfaces et hierarchie des listes)
+%
+%  Compilation (deux passes pour la table des matieres) :
+%     pdflatex cours_java_arrays_strings_lists.tex
+%     pdflatex cours_java_arrays_strings_lists.tex
+% =============================================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage[table]{xcolor}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{amssymb}
+
+% --- Couleurs (meme palette que le cours d'algorithmes) --------------------
+\definecolor{primary}{HTML}{1F3A5F}
+\definecolor{accent}{HTML}{2E86DE}
+\definecolor{codebg}{HTML}{F4F7FB}
+\definecolor{codekw}{HTML}{1F3A5F}
+\definecolor{codestr}{HTML}{27AE60}
+\definecolor{codecom}{HTML}{7F8C99}
+\definecolor{rulecol}{HTML}{D5DEE8}
+
+% --- Liens -------------------------------------------------------------
+\hypersetup{colorlinks=true, linkcolor=accent, urlcolor=accent, pdftitle={Cours Java -- Arrays, Strings, List, Collections}}
+
+% --- En-tete / pied de page ---------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{primary}Cours Java -- Arrays, Strings, List, Collections}
+\fancyhead[R]{\small\color{codecom}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% --- Titres de section ---------------------------------------------------
+\titleformat{\section}{\Large\bfseries\color{primary}}{\thesection.}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries\color{accent}}{}{0em}{}
+
+% --- Style du code Java ---------------------------------------------------
+\lstdefinestyle{javastyle}{
+  language=Java,
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{codekw}\bfseries,
+  stringstyle=\color{codestr},
+  commentstyle=\color{codecom}\itshape,
+  numbers=none,
+  frame=single,
+  rulecolor=\color{rulecol},
+  breaklines=true,
+  showstringspaces=false,
+  columns=fullflexible,
+  keepspaces=true,
+  aboveskip=8pt, belowskip=8pt,
+  xleftmargin=6pt, xrightmargin=6pt,
+  morekeywords={String,Integer,List,ArrayList,LinkedList,Map,HashMap,Set,HashSet,Collection,Collections,Arrays,Optional,var},
+  literate=%
+    {é}{{\'e}}1 {è}{{\`e}}1 {ê}{{\^e}}1 {à}{{\`a}}1 {ô}{{\^o}}1
+    {î}{{\^i}}1 {ç}{{\c c}}1 {É}{{\'E}}1 {È}{{\`E}}1 {ù}{{\`u}}1,
+}
+\lstset{style=javastyle}
+
+% --- Boites "Quand l'utiliser" / info -------------------------------------
+\newtcolorbox{infobox}[1]{colback=codebg,colframe=accent,title=#1,
+  fonttitle=\bfseries\color{white},boxrule=0.5pt,arc=2pt,left=6pt,right=6pt,top=4pt,bottom=4pt}
+
+\newcommand{\complexite}[2]{%
+  \noindent\textbf{Complexite :}\quad Temps \texttt{#1} \quad|\quad Espace \texttt{#2}\par\smallskip}
+
+\newcommand{\leetcode}[1]{\noindent\textbf{Problemes types :} #1\par\medskip}
+
+% =============================================================================
+\begin{document}
+
+% --- Page de titre ----------------------------------------------------------
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+{\color{primary}\Huge\bfseries Cours Java\par}
+\vspace{0.6cm}
+{\color{accent}\LARGE Arrays, Strings, List \& Java Collections Framework\par}
+\vspace{1.2cm}
+{\large Les structures de donnees de base en Java :\\
+tableaux, chaines de caracteres, listes, et la hierarchie des interfaces\\
+du Collections Framework.\par}
+\vfill
+{\color{codecom}\large Cours a imprimer -- support d'entrainement\par}
+\vspace{2cm}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% =============================================================================
+\section{Arrays (tableaux) en Java}
+% =============================================================================
+
+Un tableau (\texttt{array}) est la structure de donnees la plus basique de Java :
+une zone memoire \textbf{contigue} de \textbf{taille fixe}, dont tous les
+elements ont le \textbf{meme type}. C'est le bloc de construction sur lequel
+sont batis \texttt{ArrayList}, \texttt{String} (en interne, un tableau de
+\texttt{char}/\texttt{byte}), et une bonne partie du Collections Framework.
+
+\textbf{L'idee.} Parce que la taille est fixee a la creation et que les
+elements sont contigus en memoire, l'acces a l'indice \texttt{i} se fait par un
+simple calcul d'adresse (\texttt{base + i * taille\_element}) : c'est pour cela
+que l'acces par indice est en \texttt{O(1)}. En contrepartie, on ne peut ni
+agrandir ni retrecir un tableau apres sa creation.
+
+\begin{infobox}{Declaration et initialisation}
+\end{infobox}
+
+\begin{lstlisting}
+int[] nums = new int[5];              // tableau de 5 entiers, initialises a 0
+int[] nums2 = {1, 2, 3, 4, 5};        // initialisation directe
+int[] nums3 = new int[]{1, 2, 3};     // forme explicite equivalente
+
+int[][] matrix = new int[3][4];       // tableau 2D : 3 lignes, 4 colonnes
+int[][] grid = {{1, 2}, {3, 4}};      // initialisation directe d'une matrice
+
+System.out.println(nums.length);      // longueur : propriete, PAS une methode
+\end{lstlisting}
+
+\begin{infobox}{Piege classique}
+\texttt{nums.length} est un \textbf{champ}, pas une methode : pas de parentheses.
+A l'inverse, pour une \texttt{String}, c'est \texttt{str.length()} avec
+parentheses (une methode). Confondre les deux est l'erreur de syntaxe la plus
+frequente chez les debutants en Java venant d'autres langages.
+\end{infobox}
+
+\subsection{Parcours d'un tableau}
+
+\begin{lstlisting}
+int[] nums = {10, 20, 30, 40};
+
+// Boucle indexee classique
+for (int i = 0; i < nums.length; i++) {
+    System.out.println(nums[i]);
+}
+
+// Boucle "for-each" (enhanced for) : plus lisible si on n'a pas besoin de l'indice
+for (int n : nums) {
+    System.out.println(n);
+}
+\end{lstlisting}
+
+\textbf{Reconnaitre quand utiliser quelle boucle.} Utilise le \texttt{for-each}
+des que tu n'as besoin que de la \emph{valeur}. Reviens a la boucle indexee des
+que tu as besoin de l'\textbf{indice} lui-meme (modifier le tableau en place,
+comparer des positions, parcourir a l'envers, ou avancer de plusieurs pas a la
+fois).
+
+\subsection{La classe utilitaire \texttt{Arrays}}
+
+Le tableau lui-meme n'a presque aucune methode ; toutes les operations
+utiles passent par la classe statique \texttt{java.util.Arrays}.
+
+\begin{lstlisting}
+import java.util.Arrays;
+
+int[] nums = {5, 3, 8, 1};
+
+Arrays.sort(nums);                          // tri en place, O(n log n)
+System.out.println(Arrays.toString(nums));  // affichage lisible : [1, 3, 5, 8]
+
+int[] copie = Arrays.copyOf(nums, 6);       // copie avec nouvelle taille (padding a 0)
+int[] sousTab = Arrays.copyOfRange(nums, 1, 3); // sous-tableau [indice 1, 3[
+
+boolean egaux = Arrays.equals(nums, copie); // comparaison element par element
+Arrays.fill(nums, 0);                       // remplit tout le tableau avec 0
+
+// binarySearch exige un tableau DEJA TRIE, sinon resultat indefini
+int idx = Arrays.binarySearch(nums, 5);
+\end{lstlisting}
+
+\complexite{O(1) acces par indice ; O(n) recherche lineaire ; O(n log n) tri}{O(n)}
+
+\begin{infobox}{Piege classique}
+Un tableau d'objets (\texttt{int[][]}, \texttt{Object[]}) n'a \textbf{pas} de
+\texttt{toString()} lisible par defaut : \texttt{System.out.println(nums)}
+affiche une adresse memoire du type \texttt{[I@1b6d3586}. Il faut toujours
+passer par \texttt{Arrays.toString(nums)} (tableau 1D) ou
+\texttt{Arrays.deepToString(matrix)} (tableau 2D).
+\end{infobox}
+
+\subsection{Convertir entre tableau et liste}
+
+C'est une source frequente de bugs subtils en entretien.
+
+\begin{lstlisting}
+Integer[] boxed = {1, 2, 3};
+List<Integer> vue = Arrays.asList(boxed);   // VUE sur le tableau, taille fixe !
+// vue.add(4);  // UnsupportedOperationException : on ne peut pas l'agrandir
+
+List<Integer> vraieListe = new ArrayList<>(Arrays.asList(boxed)); // copie modifiable
+
+// Attention : Arrays.asList ne fonctionne pas comme attendu sur un tableau primitif
+int[] primitifs = {1, 2, 3};
+List<int[]> mauvais = Arrays.asList(primitifs); // liste d'UN SEUL element (le tableau lui-meme) !
+\end{lstlisting}
+
+\begin{infobox}{Piege classique}
+\texttt{Arrays.asList(tableauPrimitif)} sur un \texttt{int[]} ne cree pas une
+\texttt{List<Integer>} de 3 elements, mais une \texttt{List<int[]>} d'un seul
+element (a cause de l'autoboxing qui ne s'applique qu'aux types objets).
+Il faut un tableau de \texttt{Integer[]} (type objet) pour que la conversion se
+comporte comme attendu, ou utiliser \texttt{Arrays.stream(primitifs).boxed()}.
+\end{infobox}
+
+\newpage
+% =============================================================================
+\section{Strings (chaines de caracteres) en Java}
+% =============================================================================
+
+En Java, \texttt{String} est un \textbf{objet immuable} : une fois cree, son
+contenu ne peut jamais changer. Toute operation qui "modifie" une chaine
+(\texttt{+}, \texttt{substring}, \texttt{replace}...) cree en realite une
+\textbf{nouvelle} chaine et laisse l'originale intacte.
+
+\textbf{L'idee.} L'immuabilite permet a la JVM de reutiliser en toute securite
+la meme instance pour deux litteraux identiques (le \emph{String Pool}), et
+rend les \texttt{String} intrinsequement thread-safe. Le prix a payer : creer
+une chaine dans une boucle avec des concatenations \texttt{+=} recree un
+nouvel objet a chaque iteration, ce qui devient couteux en \texttt{O(n\textsuperscript{2})}
+sur \texttt{n} concatenations.
+
+\begin{infobox}{Quand l'utiliser}
+Toute donnee textuelle immuable : cles de map, comparaisons, parsing.
+Des que tu dois construire une chaine \textbf{progressivement} (boucle,
+concatenations repetees), pense \texttt{StringBuilder} plutot que \texttt{String}.
+\end{infobox}
+
+\subsection{Methodes essentielles}
+
+\begin{lstlisting}
+String s = "Hello, World!";
+
+s.length();                 // 13 -- methode, PAS un champ (contrairement a un tableau)
+s.charAt(0);                 // 'H'
+s.substring(7);              // "World!"      (a partir de l'indice 7)
+s.substring(7, 12);          // "World"       (indice 7 inclus, 12 exclu)
+s.indexOf("World");          // 7             (-1 si non trouve)
+s.toLowerCase();              // "hello, world!"
+s.toUpperCase();              // "HELLO, WORLD!"
+s.trim();                     // supprime les espaces en debut/fin
+s.strip();                    // equivalent moderne (Java 11+), gere aussi l'Unicode
+s.replace("World", "Java");  // "Hello, Java!"
+s.split(", ");                // String[] {"Hello", "World!"}
+s.contains("World");          // true
+s.startsWith("Hello");        // true
+s.equals("hello, world!");    // false -- sensible a la casse
+s.equalsIgnoreCase("HELLO, WORLD!"); // true
+
+String.join("-", "a", "b", "c");  // "a-b-c"
+"  ".isBlank();                    // true (Java 11+)
+"".isEmpty();                       // true
+\end{lstlisting}
+
+\begin{infobox}{Piege classique}
+Ne \textbf{jamais} comparer deux \texttt{String} avec \texttt{==} : cela
+compare des references memoire, pas le contenu. \texttt{new String("abc") ==
+"abc"} vaut \texttt{false}. Toujours utiliser \texttt{.equals()} (ou
+\texttt{.equalsIgnoreCase()}).
+\end{infobox}
+
+\subsection{Construire une chaine efficacement : \texttt{StringBuilder}}
+
+\begin{lstlisting}
+StringBuilder sb = new StringBuilder();
+for (int i = 0; i < 5; i++) {
+    sb.append(i).append(",");     // append est chainable
+}
+sb.deleteCharAt(sb.length() - 1); // retire la derniere virgule
+String resultat = sb.toString();  // "0,1,2,3,4"
+
+sb.reverse();                       // inverse le contenu en place
+sb.insert(0, "prefix-");            // insertion a un indice donne
+\end{lstlisting}
+
+\complexite{O(1) amorti par append}{O(n)}
+
+\begin{infobox}{Reconnaitre le pattern}
+Des que l'enonce implique de construire une chaine \emph{caractere par
+caractere} ou \emph{morceau par morceau} dans une boucle (inverser une chaine,
+construire un resultat progressif, palindromes), utilise \texttt{StringBuilder}
+: cela transforme un cout quadratique en cout lineaire.
+\end{infobox}
+
+\subsection{Manipuler les caracteres}
+
+\begin{lstlisting}
+char c = 'a';
+Character.isDigit(c);       // false
+Character.isLetter(c);      // true
+Character.isUpperCase(c);   // false
+Character.toUpperCase(c);   // 'A'
+
+// Convertir String en tableau de char pour un acces/tri caractere par caractere
+char[] chars = "hello".toCharArray();
+Arrays.sort(chars);                         // tri des caracteres
+String trie = new String(chars);            // reconversion en String
+\end{lstlisting}
+
+\leetcode{Valid Anagram (LC 242), Reverse String (LC 344), Longest Common Prefix (LC 14), Valid Palindrome (LC 125).}
+
+\newpage
+% =============================================================================
+\section{List en Java}
+% =============================================================================
+
+\texttt{List<E>} est une \textbf{interface} du Collections Framework
+representant une sequence ordonnee d'elements, avec doublons autorises et
+acces par indice. Elle resout la principale limite des tableaux : la
+\textbf{taille fixe}.
+
+\textbf{L'idee.} On programme presque toujours contre l'interface
+\texttt{List<E>} plutot que contre une implementation concrete
+(\texttt{ArrayList}, \texttt{LinkedList}) : cela permet de changer
+d'implementation plus tard sans modifier le reste du code, et c'est la
+convention Java standard (« coder contre une interface »).
+
+\begin{lstlisting}
+List<Integer> list = new ArrayList<>();   // le type declare est l'interface,
+                                           // le type instancie est l'implementation
+
+list.add(10);
+list.add(20);
+list.add(0, 5);           // insertion a l'indice 0 : [5, 10, 20]
+list.get(1);              // 10
+list.set(1, 99);          // remplace l'element a l'indice 1 : [5, 99, 20]
+list.remove(0);            // remove(int) : supprime PAR INDICE -> [99, 20]
+list.remove(Integer.valueOf(99)); // remove(Object) : supprime PAR VALEUR -> [20]
+list.contains(20);         // true
+list.indexOf(20);          // 0
+list.size();                // 1
+list.isEmpty();             // false
+list.clear();               // vide la liste
+
+List<Integer> literal = List.of(1, 2, 3); // liste IMMUABLE (Java 9+)
+\end{lstlisting}
+
+\begin{infobox}{Piege classique}
+Sur une \texttt{List<Integer>}, \texttt{list.remove(0)} et
+\texttt{list.remove(Integer.valueOf(0))} \textbf{ne font pas la meme chose} :
+la premiere supprime l'element a l'\emph{indice} 0 (surcharge
+\texttt{remove(int)}), la seconde supprime la \emph{valeur} 0 (surcharge
+\texttt{remove(Object)}). C'est une ambiguite classique qui piege beaucoup de
+candidats en entretien.
+\end{infobox}
+
+\subsection{\texttt{ArrayList} vs \texttt{LinkedList}}
+
+Les deux implementent \texttt{List<E>}, mais avec des structures internes tres
+differentes.
+
+\begin{longtable}{p{3.2cm}p{5.4cm}p{5.4cm}}
+\toprule
+\textbf{Operation} & \textbf{ArrayList} (tableau redimensionnable) & \textbf{LinkedList} (liste doublement chainee) \\
+\midrule
+\endhead
+Acces par indice \texttt{get(i)} & \texttt{O(1)} & \texttt{O(n)} \\
+Ajout/suppression en fin & \texttt{O(1)} amorti & \texttt{O(1)} \\
+Ajout/suppression en debut & \texttt{O(n)} (decalage) & \texttt{O(1)} \\
+Ajout/suppression au milieu & \texttt{O(n)} (decalage) & \texttt{O(n)} pour trouver + \texttt{O(1)} pour inserer \\
+Empreinte memoire & Compacte & Plus lourde (pointeurs prev/next par noeud) \\
+\bottomrule
+\end{longtable}
+
+\begin{infobox}{Reconnaitre quand utiliser quoi}
+\texttt{ArrayList} est le choix par defaut dans l'immense majorite des cas :
+les acces par indice et les parcours dominent en pratique. Ne choisis
+\texttt{LinkedList} que si tu fais \emph{beaucoup} d'insertions/suppressions
+en tete ou en queue (elle implemente aussi \texttt{Deque<E>}, utile pour une
+pile ou une file).
+\end{infobox}
+
+\begin{lstlisting}
+LinkedList<Integer> deque = new LinkedList<>();
+deque.addFirst(1);   // ajout en tete, O(1)
+deque.addLast(2);     // ajout en queue, O(1)
+deque.removeFirst();  // retrait en tete, O(1)
+deque.peekLast();     // consultation sans retrait
+\end{lstlisting}
+
+\subsection{Parcourir et trier une liste}
+
+\begin{lstlisting}
+List<Integer> nums = new ArrayList<>(List.of(5, 3, 8, 1));
+
+for (int n : nums) {                 // for-each
+    System.out.println(n);
+}
+
+Collections.sort(nums);              // tri croissant en place, O(n log n)
+nums.sort(Comparator.reverseOrder()); // tri decroissant, methode d'instance (Java 8+)
+
+// Tri avec comparateur personnalise (ex : liste de String par longueur)
+List<String> mots = new ArrayList<>(List.of("banane", "kiwi", "pomme"));
+mots.sort((a, b) -> a.length() - b.length());
+mots.sort(Comparator.comparingInt(String::length));  // equivalent, plus idiomatique
+\end{lstlisting}
+
+\begin{infobox}{Piege classique}
+Modifier une liste (\texttt{add}/\texttt{remove}) \textbf{pendant} un
+\texttt{for-each} leve une \texttt{ConcurrentModificationException}. Pour
+supprimer des elements en parcourant, utilise un \texttt{Iterator} explicite
+avec \texttt{iterator.remove()}, ou \texttt{list.removeIf(condition)}.
+\end{infobox}
+
+\begin{lstlisting}
+// Suppression sure pendant un parcours
+Iterator<Integer> it = nums.iterator();
+while (it.hasNext()) {
+    if (it.next() % 2 == 0) {
+        it.remove();          // seule facon sure de supprimer pendant l'iteration
+    }
+}
+
+// Equivalent moderne et plus lisible (Java 8+)
+nums.removeIf(n -> n % 2 == 0);
+\end{lstlisting}
+
+\complexite{Voir tableau ci-dessus selon l'implementation}{O(n)}
+\leetcode{Rotate Array (LC 189), Remove Duplicates from Sorted Array (LC 26), Merge Sorted Array (LC 88).}
+
+\newpage
+% =============================================================================
+\section{Java Collections Framework : interfaces et hierarchie}
+% =============================================================================
+
+Le Collections Framework est l'ensemble unifie d'interfaces et de classes de
+\texttt{java.util} pour manipuler des groupes d'objets. Comprendre sa
+\textbf{hierarchie d'interfaces} est essentiel : en entretien comme en
+production, on declare toujours des variables avec le type \textbf{interface}
+le plus general possible (\texttt{List}, \texttt{Map}, \texttt{Set}), jamais
+avec le type d'implementation concrete.
+
+\subsection{Vue d'ensemble de la hierarchie}
+
+\begin{lstlisting}
+Iterable<E>
+    |
+Collection<E>  ------------------------------------
+    |                    |                          |
+  List<E>              Set<E>                    Queue<E>
+    |                 /      \                       |
+ArrayList        HashSet   TreeSet/            LinkedList / ArrayDeque
+LinkedList       LinkedHashSet  SortedSet           |
+                                                   Deque<E>
+
+Map<K,V>  (NE derive PAS de Collection -- interface a part)
+    |
+  HashMap, LinkedHashMap, TreeMap (implemente SortedMap)
+\end{lstlisting}
+
+\begin{infobox}{Point souvent teste en entretien}
+\texttt{Map<K,V>} ne fait \textbf{pas} partie de la hierarchie
+\texttt{Collection<E>} : c'est une interface racine independante, car une map
+manipule des \emph{paires} cle-valeur et non de simples elements. C'est une
+question de comprehension frequemment posee pour verifier qu'on connait la
+hierarchie plutot que de l'avoir simplement memorisee par cœur.
+\end{infobox}
+
+\subsection{L'interface \texttt{Collection<E>}}
+
+Racine commune de \texttt{List}, \texttt{Set} et \texttt{Queue}. Elle definit
+le contrat partage par toutes les collections d'elements uniques (au sens
+"un seul type d'element", doublons ou non selon la sous-interface) :
+\texttt{add}, \texttt{remove}, \texttt{contains}, \texttt{size},
+\texttt{isEmpty}, \texttt{iterator}, \texttt{clear}, \texttt{stream}.
+
+\subsection{\texttt{List<E>} : sequence ordonnee, doublons autorises}
+
+Deja detaillee section precedente. Implementations : \texttt{ArrayList}
+(tableau redimensionnable), \texttt{LinkedList} (liste chainee).
+
+\subsection{\texttt{Set<E>} : elements uniques, pas de doublons}
+
+\begin{longtable}{p{3.4cm}p{4.6cm}p{6cm}}
+\toprule
+\textbf{Implementation} & \textbf{Structure interne} & \textbf{Caracteristique} \\
+\midrule
+\endhead
+\texttt{HashSet} & Table de hachage (adossee a une \texttt{HashMap}) & Pas d'ordre garanti ; \texttt{O(1)} moyen pour add/contains \\
+\texttt{LinkedHashSet} & Table de hachage + liste chainee & Conserve l'ordre d'insertion ; \texttt{O(1)} moyen \\
+\texttt{TreeSet} & Arbre rouge-noir & Elements toujours tries ; \texttt{O(log n)} pour add/contains \\
+\bottomrule
+\end{longtable}
+
+\begin{lstlisting}
+Set<Integer> set = new HashSet<>();
+set.add(5);
+set.add(5);              // ignore silencieusement, deja present
+set.contains(5);          // true, O(1) moyen
+
+Set<Integer> ordonne = new TreeSet<>(Set.of(5, 1, 3)); // {1, 3, 5} -- toujours trie
+\end{lstlisting}
+
+\begin{infobox}{Reconnaitre le pattern}
+Des que l'enonce parle d'\emph{unicite}, de \emph{doublons a supprimer}, ou
+de tester une appartenance repetee dans une boucle (\texttt{if (list.contains(x))}
+en \texttt{O(n)} a chaque appel), remplace la structure par un \texttt{Set} :
+le test d'appartenance passe de \texttt{O(n)} a \texttt{O(1)} moyen.
+\end{infobox}
+
+\subsection{\texttt{Queue<E>} et \texttt{Deque<E>}}
+
+\texttt{Queue<E>} modelise une file (FIFO -- premier entre, premier sorti).
+\texttt{Deque<E>} (\emph{double-ended queue}) generalise a une file a deux
+extremites, et peut donc aussi servir de \textbf{pile} (LIFO).
+
+\begin{lstlisting}
+Queue<Integer> file = new LinkedList<>();
+file.offer(1);           // ajoute en fin (equivalent add, mais ne leve pas d'exception si echec)
+file.poll();               // retire et retourne la tete (null si vide, contrairement a remove())
+file.peek();                // consulte la tete sans retirer
+
+Deque<Integer> pile = new ArrayDeque<>();  // ArrayDeque : implementation recommandee pour une pile
+pile.push(1);              // empile
+pile.push(2);
+pile.pop();                 // depile -> 2 (LIFO)
+pile.peek();                 // consulte le sommet -> 1
+\end{lstlisting}
+
+\begin{infobox}{Piege classique}
+La classe historique \texttt{java.util.Stack} existe toujours mais est
+\textbf{deconseillee} : elle herite de \texttt{Vector}, une classe
+synchronisee (donc plus lente inutilement) et mal concue. Utiliser
+\texttt{ArrayDeque} pour implementer une pile en Java moderne.
+\end{infobox}
+
+\subsection{Comparaison synthetique des trois familles}
+
+\begin{longtable}{p{2.6cm}p{3.4cm}p{4.2cm}p{4.2cm}}
+\toprule
+\textbf{Interface} & \textbf{Doublons ?} & \textbf{Ordre ?} & \textbf{Cas d'usage typique} \\
+\midrule
+\endhead
+\texttt{List<E>} & Oui & Ordre d'insertion, indexe & Sequence, historique, resultat ordonne \\
+\texttt{Set<E>} & Non & Depend de l'implementation & Unicite, appartenance rapide \\
+\texttt{Queue}/\texttt{Deque} & Oui & FIFO ou LIFO & File d'attente, pile, BFS/DFS \\
+\texttt{Map<K,V>} & Cles non, valeurs oui & Depend de l'implementation & Association cle $\to$ valeur, comptage, cache \\
+\bottomrule
+\end{longtable}
+
+\begin{infobox}{A retenir}
+Toujours \textbf{declarer le type interface} et \textbf{instancier
+l'implementation} : \texttt{List<Integer> l = new ArrayList<>();} plutot que
+\texttt{ArrayList<Integer> l = new ArrayList<>();}. Cela decouple le code du
+choix d'implementation et permet de le changer plus tard (par ex. passer
+d'\texttt{ArrayList} a \texttt{LinkedList}) sans toucher au reste du programme.
+\end{infobox}
+
+\leetcode{Design HashSet (LC 705), Implement Queue using Stacks (LC 232), Min Stack (LC 155).}
+
+\end{document}

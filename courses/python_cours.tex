@@ -1,0 +1,947 @@
+% =============================================================================
+%  python_cours.tex - Les bases de Python pour resoudre des problemes
+%  Des types de variables jusqu'aux decorateurs, avec la gestion des erreurs.
+%
+%  Compilation (deux passes pour la table des matieres) :
+%     pdflatex python_cours.tex
+%     pdflatex python_cours.tex
+% =============================================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage[table]{xcolor}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+
+% --- Couleurs ---------------------------------------------------------------
+\definecolor{primary}{HTML}{20603D}   % vert Python fonce
+\definecolor{accent}{HTML}{2E86DE}    % bleu Python
+\definecolor{codebg}{HTML}{F4F7FB}
+\definecolor{codekw}{HTML}{20603D}
+\definecolor{codestr}{HTML}{B7472A}
+\definecolor{codecom}{HTML}{7F8C99}
+\definecolor{rulecol}{HTML}{D5DEE8}
+\definecolor{warnbg}{HTML}{FFF4E6}
+\definecolor{warnframe}{HTML}{E67E22}
+
+\hypersetup{colorlinks=true, linkcolor=accent, urlcolor=accent, pdftitle={Cours Python - les bases}}
+
+% --- En-tete / pied de page -------------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{primary}Cours Python -- les bases}
+\fancyhead[R]{\small\color{codecom}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% --- Titres -----------------------------------------------------------------
+\titleformat{\section}{\Large\bfseries\color{primary}}{\thesection.}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries\color{accent}}{\thesubsection}{0.6em}{}
+
+% --- Style du code Python ---------------------------------------------------
+\lstdefinestyle{py}{
+  language=Python,
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{codekw}\bfseries,
+  stringstyle=\color{codestr},
+  commentstyle=\color{codecom}\itshape,
+  numbers=none,
+  frame=single,
+  rulecolor=\color{rulecol},
+  breaklines=true,
+  showstringspaces=false,
+  columns=fullflexible,
+  keepspaces=true,
+  aboveskip=8pt, belowskip=8pt,
+  xleftmargin=6pt, xrightmargin=6pt,
+  literate=%
+    {é}{{\'e}}1 {è}{{\`e}}1 {ê}{{\^e}}1 {à}{{\`a}}1 {ô}{{\^o}}1
+    {î}{{\^i}}1 {ç}{{\c c}}1 {É}{{\'E}}1 {È}{{\`E}}1 {ù}{{\`u}}1 {û}{{\^u}}1,
+}
+\lstset{style=py}
+
+% --- Boites -----------------------------------------------------------------
+\newtcolorbox{infobox}[1]{colback=codebg,colframe=accent,title=#1,
+  fonttitle=\bfseries\color{white},boxrule=0.5pt,arc=2pt,left=6pt,right=6pt,top=4pt,bottom=4pt}
+
+\newtcolorbox{piege}{colback=warnbg,colframe=warnframe,title=\textbf{Piege courant},
+  fonttitle=\bfseries\color{white},boxrule=0.5pt,arc=2pt,left=6pt,right=6pt,top=4pt,bottom=4pt}
+
+% =============================================================================
+\begin{document}
+
+% --- Page de titre ----------------------------------------------------------
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+{\color{primary}\Huge\bfseries Les bases de Python\par}
+\vspace{0.6cm}
+{\color{accent}\LARGE Des variables aux decorateurs\par}
+\vspace{1.2cm}
+{\large Tout ce qu'il faut pour resoudre des problemes\\
+et comprendre les erreurs.\par}
+\vfill
+{\color{codecom}\large Cours a imprimer -- support d'entrainement\par}
+\vspace{2cm}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% =============================================================================
+\section{Types de variables}
+% =============================================================================
+Python est \emph{dynamiquement type} : une variable n'a pas de type declare, elle
+recoit le type de la valeur qu'on lui affecte. Elle est aussi \emph{fortement
+typee} : \texttt{"3" + 5} leve une erreur au lieu de deviner.
+
+\subsection{Les types de base}
+\begin{lstlisting}
+n   = 42            # int   : entier de taille illimitee
+x   = 3.14          # float : nombre a virgule flottante
+b   = True          # bool  : True / False (sous-classe de int)
+s   = "bonjour"     # str   : chaine de caracteres (immuable)
+z   = None          # NoneType : absence de valeur
+c   = 2 + 3j        # complex
+
+print(type(n))      # <class 'int'>
+print(isinstance(b, int))   # True : bool herite de int
+\end{lstlisting}
+
+Chaque valeur en Python est un \emph{objet} qui connaît son propre type. Le type
+determine les operations autorisees : on peut multiplier deux \texttt{int}, mais
+pas additionner un \texttt{int} et une \texttt{str}. Retenir la difference entre
+type \emph{mutable} (modifiable apres creation : liste, dict, set) et type
+\emph{immuable} (fige : int, float, str, tuple) est essentiel : cela explique
+beaucoup d'erreurs et de comportements surprenants que l'on verra plus loin.
+
+\subsection{Conversions (casting)}
+Convertir, c'est demander explicitement a Python de fabriquer un nouvel objet
+d'un autre type a partir d'une valeur. C'est indispensable, par exemple, quand on
+lit une donnee au clavier (\texttt{input} renvoie toujours une \texttt{str}) et
+qu'on veut faire un calcul dessus. Attention : une conversion peut echouer et
+lever une exception (\texttt{int("abc")} $\rightarrow$ \texttt{ValueError}).
+
+\begin{lstlisting}
+int("42")       # 42     (str  -> int)
+float("3.14")   # 3.14
+str(42)         # "42"
+int(3.9)        # 3      (troncature, pas d'arrondi)
+bool(0)         # False  ; bool("") -> False ; bool([]) -> False
+\end{lstlisting}
+
+\begin{piege}
+La division \texttt{/} renvoie toujours un \texttt{float} (\texttt{6 / 2 == 3.0}).
+Pour un entier, utilise la division entiere \texttt{//} (\texttt{7 // 2 == 3}).
+\end{piege}
+
+% =============================================================================
+\section{Operateurs}
+% =============================================================================
+Les operateurs sont les symboles qui combinent ou comparent des valeurs. Deux
+familles reviennent sans cesse dans la resolution de problemes : les operateurs
+de \emph{comparaison} (qui renvoient un booleen \texttt{True}/\texttt{False} et
+pilotent les conditions) et les operateurs \emph{logiques} (\texttt{and},
+\texttt{or}, \texttt{not}) qui les combinent. Bon a savoir : \texttt{and} et
+\texttt{or} sont \emph{paresseux} (court-circuit) -- \texttt{a and b} n'evalue
+\texttt{b} que si \texttt{a} est vrai, ce qui permet d'ecrire des tests surs
+comme \texttt{if x and x[0] == 1}.
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{4cm} p{9cm}}
+\rowcolor{primary}
+\textbf{\color{white}Categorie} & \textbf{\color{white}Operateurs} \\
+\hline
+Arithmetiques   & \texttt{+  -  *  /  //  \%  **} \\
+Comparaison     & \texttt{==  !=  <  >  <=  >=} \\
+Logiques        & \texttt{and  or  not} \\
+Appartenance    & \texttt{in  ,  not in} \\
+Identite        & \texttt{is  ,  is not} \\
+Affectation     & \texttt{=  +=  -=  *=  /=  //=} \\
+\end{longtable}
+
+\begin{piege}
+\texttt{==} compare les \emph{valeurs} ; \texttt{is} compare l'\emph{identite}
+(meme objet en memoire). Utilise \texttt{is} uniquement avec \texttt{None} :
+\texttt{if x is None}.
+\end{piege}
+
+% =============================================================================
+\section{Chaines de caracteres}
+% =============================================================================
+Une chaine (\texttt{str}) est une suite ordonnee de caracteres. On y accede par
+\emph{indexation} (\texttt{s[i]}, le premier caractere est a l'indice \texttt{0})
+et par \emph{tranche} (\texttt{s[debut:fin]}, la borne de fin etant exclue). Les
+indices negatifs comptent depuis la fin, ce qui evite de calculer la longueur.
+Comme les chaines sont \textbf{immuables}, toutes les methodes qui « modifient »
+une chaine (comme \texttt{upper} ou \texttt{replace}) renvoient en realite une
+\emph{nouvelle} chaine : l'originale reste intacte. Les \emph{f-strings}
+(\texttt{f"..."}) sont la facon moderne et lisible d'inserer des variables dans
+un texte.
+
+\begin{lstlisting}
+s = "Python"
+len(s)              # 6
+s[0]                # 'P'      (indexation)
+s[-1]               # 'n'      (indice negatif = depuis la fin)
+s[0:3]              # 'Pyt'    (slicing [debut:fin])
+s.upper()           # 'PYTHON'
+s.replace("Py", "Ja")   # 'Jathon'
+",".join(["a", "b"])    # 'a,b'
+"a,b,c".split(",")      # ['a', 'b', 'c']
+
+nom, age = "Alice", 30
+f"{nom} a {age} ans"    # f-string : 'Alice a 30 ans'
+\end{lstlisting}
+
+\begin{piege}
+Les chaines sont \emph{immuables} : \texttt{s[0] = "X"} leve
+\texttt{TypeError}. Il faut reconstruire une nouvelle chaine.
+\end{piege}
+
+\subsection{Astuces de manipulation}
+Au-dela des bases, une poignee de methodes reviennent sans cesse des qu'on doit
+\emph{nettoyer}, \emph{aligner} ou \emph{analyser} du texte. Les connaitre evite
+de reecrire a la main des boucles que la bibliotheque standard fait deja tres
+bien.
+
+\begin{lstlisting}
+# Nettoyage : strip enleve les caracteres indesirables aux extremites
+"  bonjour  ".strip()          # 'bonjour'   (espaces des deux cotes)
+"##titre##".strip("#")         # 'titre'     (caractere precis)
+"  bonjour".lstrip()           # 'bonjour'   (seulement a gauche)
+"bonjour  ".rstrip()           # 'bonjour'   (seulement a droite)
+
+# Alignement / padding : utile pour formater un affichage tabulaire
+"7".zfill(3)                   # '007'  (complete avec des zeros a gauche)
+"7".rjust(3, "0")              # '007'  (equivalent, plus general)
+"ok".ljust(5, ".")             # 'ok...' (aligne a gauche)
+"ok".center(6, "-")            # '-ok---' (centre)
+
+# Recherche et tests
+"algorithme".startswith("algo")   # True
+"algorithme".endswith("me")       # True
+"algorithme".find("go")           # 2   (-1 si absent, ne leve pas d'erreur)
+"algorithme".index("go")          # 2   (leve ValueError si absent)
+"abc123".isalpha()                # False (contient des chiffres)
+"abc123".isalnum()                # True  (lettres + chiffres uniquement)
+
+# Remplacement multiple d'un coup avec translate (rapide, sans boucle)
+table = str.maketrans("ae", "AE")     # a->A, e->E
+"algorithme".translate(table)         # 'AlgorithmE'
+
+# split avec limite, et rsplit pour couper depuis la droite
+"a=b=c".split("=", 1)             # ['a', 'b=c']       (une seule coupe)
+"a/b/c.txt".rsplit("/", 1)        # ['a/b', 'c.txt']   (coupe depuis la fin)
+"  a   b  c ".split()             # ['a', 'b', 'c']    (split() sans argument
+                                   # ignore les espaces multiples/en trop)
+
+# f-strings avancees : formater sans concatener
+prix = 1234.5
+f"{prix:,.2f}"          # '1,234.50'  (separateur de milliers, 2 decimales)
+f"{prix:>10.1f}"        # '    1234.5' (aligne a droite sur 10 caracteres)
+nom = "Alice"
+f"{nom=}"                # "nom='Alice'" (affiche aussi le nom de variable, debug rapide)
+\end{lstlisting}
+
+\begin{infobox}{Compter des caracteres : le reflexe \texttt{Counter}}
+Plutot que d'ecrire une boucle avec un dictionnaire pour compter les occurrences
+de chaque caractere, \texttt{collections.Counter} le fait en une ligne et offre
+directement les caracteres les plus frequents.
+\begin{lstlisting}
+from collections import Counter
+
+freq = Counter("mississippi")      # Counter({'i': 4, 's': 4, 'p': 2, 'm': 1})
+freq.most_common(2)                # [('i', 4), ('s', 4)]  (les 2 plus frequents)
+freq["i"]                          # 4  (0 si absent, jamais de KeyError)
+\end{lstlisting}
+\end{infobox}
+
+\begin{piege}
+\texttt{"a" in "banane"} teste une \emph{sous-chaine}, pas un caractere isole
+uniquement : \texttt{"an" in "banane"} vaut aussi \texttt{True}. Pratique, mais
+ne pas confondre avec un test d'egalite caractere par caractere.
+\end{piege}
+
+% =============================================================================
+\section{Structures de donnees}
+% =============================================================================
+Choisir la bonne structure de donnees est souvent la moitie de la solution d'un
+probleme. Python en offre quatre fondamentales, qu'on distingue selon trois
+questions : les elements sont-ils \emph{ordonnes} ? la collection est-elle
+\emph{modifiable} ? les acces se font-ils par position ou par cle ? Un bon
+reflexe : si tu ecris une boucle pour verifier « est-ce que x est dans la
+liste ? » de facon repetee, un \texttt{set} ou un \texttt{dict} (recherche en
+\texttt{O(1)} moyen) remplace avantageusement la liste (recherche en
+\texttt{O(n)}).
+
+\subsection{Liste -- ordonnee, modifiable}
+La liste est la structure a tout faire : une sequence ordonnee que l'on peut
+agrandir, trier et modifier sur place. Les \emph{comprehensions} de liste sont
+une facon concise et rapide de construire une liste a partir d'une autre
+sequence, en remplacant une boucle \texttt{for} et des \texttt{append}.
+\begin{lstlisting}
+nums = [3, 1, 2]
+nums.append(4)      # [3, 1, 2, 4]
+nums.sort()         # [1, 2, 3, 4]  (sur place)
+nums[1:3]           # [2, 3]        (slicing)
+carres = [x*x for x in range(5)]    # comprehension : [0,1,4,9,16]
+\end{lstlisting}
+
+\subsubsection*{Astuces de manipulation}
+Comme pour les chaines, une liste se manipule rarement avec de longues boucles
+manuelles : le slicing et une poignee de methodes couvrent la grande majorite
+des besoins, plus vite et plus lisiblement.
+
+\begin{lstlisting}
+nums = [10, 20, 30, 40, 50]
+
+# Slicing avance : [debut:fin:pas]
+nums[::-1]           # [50, 40, 30, 20, 10]   inverser sans modifier l'original
+nums[::2]             # [10, 30, 50]            un element sur deux
+nums[1:-1]            # [20, 30, 40]            tout sauf le premier et le dernier
+nums[:3]              # [10, 20, 30]            les 3 premiers
+nums[-3:]             # [30, 40, 50]             les 3 derniers
+
+# Ajouter / retirer : append vs extend, insert, remove, pop
+nums.append(60)        # ajoute un seul element a la fin       : [...,50,60]
+nums.extend([70, 80])  # ajoute plusieurs elements a la fin     : [...,60,70,80]
+nums.insert(0, 5)      # insere a une position precise          : [5,10,...]
+nums.remove(30)        # retire la PREMIERE occurrence de 30 (ValueError si absent)
+dernier = nums.pop()    # retire et renvoie le dernier element
+premier = nums.pop(0)   # retire et renvoie l'element a l'index 0
+
+\end{lstlisting}
+
+\begin{piege}
+\texttt{liste.append([1, 2])} ajoute la \emph{liste entiere} comme un seul
+element imbrique (\texttt{[..., [1, 2]]}), alors que
+\texttt{liste.extend([1, 2])} ajoute chaque element separement
+(\texttt{[..., 1, 2]}). Confondre les deux est une source frequente de bugs
+silencieux -- la liste ne leve pas d'erreur, elle a juste une structure
+inattendue.
+\end{piege}
+
+\begin{lstlisting}
+# Tri : sort() modifie sur place et renvoie None ; sorted() renvoie une copie
+nums.sort(reverse=True)             # decroissant, sur place
+copie_triee = sorted(nums)          # laisse nums intact
+
+# Trier avec une cle (key) : le critere de tri, pas la valeur triee elle-meme
+mots = ["kiwi", "fig", "banane"]
+sorted(mots, key=len)               # ['fig', 'kiwi', 'banane']  (par longueur)
+personnes = [("Bob", 25), ("Alice", 30)]
+sorted(personnes, key=lambda p: p[1])   # trie par age (2e element du tuple)
+
+# Parcours combine : enumerate (index + valeur) et zip (plusieurs listes ensemble)
+for i, v in enumerate(nums):
+    print(i, v)
+noms = ["a", "b"]; ages = [1, 2]
+list(zip(noms, ages))               # [('a', 1), ('b', 2)]
+
+# Aplatir une liste de listes (une ligne, via comprehension imbriquee)
+matrice = [[1, 2], [3, 4], [5]]
+plat = [x for ligne in matrice for x in ligne]     # [1, 2, 3, 4, 5]
+
+# Fonctions utiles sur toute la liste
+sum(nums); min(nums); max(nums); len(nums)
+nums.count(10)          # nombre d'occurrences de 10
+nums.index(20)           # index de la premiere occurrence de 20 (ValueError si absent)
+20 in nums                # test d'appartenance (O(n) sur une liste, contrairement au set)
+\end{lstlisting}
+
+\begin{infobox}{Copie superficielle vs copie profonde}
+\texttt{copie = liste} ne copie \textbf{rien} : les deux noms pointent vers le
+\emph{meme} objet, modifier l'un modifie l'autre. \texttt{copie =
+liste[:]} ou \texttt{copie = liste.copy()} cree une vraie nouvelle liste, mais
+en \emph{copie superficielle} : si les elements sont eux-memes des listes
+(matrice), les sous-listes restent partagees. Pour une copie totalement
+independante, utiliser \texttt{copy.deepcopy(liste)}.
+\end{infobox}
+
+\subsection{Tuple -- ordonne, immuable}
+Le tuple ressemble a une liste mais ne peut plus changer une fois cree. On
+l'utilise pour des donnees qui vont ensemble et ne doivent pas bouger (un point
+\texttt{(x, y)}, une ligne d'une base de donnees) et pour le \emph{deballage}
+(unpacking) qui affecte plusieurs variables en une ligne. Etant immuable, un
+tuple peut servir de cle de dictionnaire, contrairement a une liste.
+
+\begin{lstlisting}
+point = (3, 4)
+x, y = point        # deballage (unpacking)
+# point[0] = 9      -> TypeError : un tuple ne se modifie pas
+\end{lstlisting}
+
+\subsection{Dictionnaire -- cle -> valeur}
+Le dictionnaire associe des \emph{cles} a des \emph{valeurs} et permet de
+retrouver une valeur instantanement a partir de sa cle. C'est l'outil ideal pour
+compter, indexer, ou representer un objet par ses attributs. La methode
+\texttt{get(cle, defaut)} evite un \texttt{KeyError} lorsque la cle peut etre
+absente. Depuis Python 3.7, un dictionnaire conserve l'ordre d'insertion des
+cles.
+
+\begin{lstlisting}
+age = {"Alice": 30, "Bob": 25}
+age["Alice"]            # 30
+age.get("Zoe", 0)       # 0  (valeur par defaut si absente)
+age["Zoe"] = 22         # ajout
+for cle, val in age.items():
+    print(cle, val)
+\end{lstlisting}
+
+\subsubsection*{Astuces de manipulation}
+Le dictionnaire est la structure la plus polyvalente de Python : elle sert a la
+fois de \emph{table de correspondance}, de \emph{compteur} et d'\emph{index}.
+Quelques idiomes reviennent dans presque tous les problemes d'algorithmique.
+
+\begin{lstlisting}
+# Dict comprehension : construire un dict en une ligne, comme pour une liste
+carres = {x: x*x for x in range(5)}          # {0:0, 1:1, 2:4, 3:9, 4:16}
+mots = ["chat", "chien", "oiseau"]
+longueurs = {m: len(m) for m in mots}        # {'chat':4, 'chien':5, 'oiseau':7}
+
+# setdefault : recupere une cle, ou l'insere avec une valeur par defaut
+graphe = {}
+graphe.setdefault("A", []).append("B")       # cree [] si absent, puis append
+graphe.setdefault("A", []).append("C")       # {'A': ['B', 'C']}
+
+# defaultdict : evite setdefault repete, la valeur par defaut est automatique
+from collections import defaultdict
+groupes = defaultdict(list)
+for mot in ["chat", "chien", "chameau"]:
+    groupes[mot[0]].append(mot)              # pas besoin de tester si 'c' existe
+# {'c': ['chat', 'chien', 'chameau']}
+
+# Fusionner deux dicts (Python 3.9+) : | cree un nouveau dict, |= modifie en place
+defauts = {"theme": "clair", "langue": "fr"}
+utilisateur = {"langue": "en"}
+config = defauts | utilisateur               # {'theme':'clair', 'langue':'en'}
+                                              # (les cles de droite ecrasent celles de gauche)
+
+# Parcourir cles / valeurs / paires
+list(age.keys())        # ['Alice', 'Bob', 'Zoe']
+list(age.values())      # [30, 25, 22]
+list(age.items())       # [('Alice', 30), ('Bob', 25), ('Zoe', 22)]
+
+# Trier un dict par valeur (frequent : classement par score, par frequence...)
+scores = {"Alice": 90, "Bob": 75, "Zoe": 88}
+sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
+# [('Alice', 90), ('Zoe', 88), ('Bob', 75)]  (trie decroissant sur la valeur)
+
+# Inverser un dict (valeur -> cle), valable seulement si les valeurs sont uniques
+{v: k for k, v in age.items()}
+
+# Supprimer une cle sans planter si elle est absente
+age.pop("Inconnu", None)     # None si absente ; pas de KeyError
+
+# Tester la presence d'une cle : in teste les CLES, jamais les valeurs
+"Alice" in age              # True   (test rapide, O(1) moyen)
+30 in age                   # False  (30 est une valeur, pas une cle !)
+30 in age.values()          # True   (il faut explicitement .values())
+
+# Construire un dict a partir de deux listes paralleles
+noms = ["Alice", "Bob", "Zoe"]
+ages = [30, 25, 22]
+dict(zip(noms, ages))        # {'Alice': 30, 'Bob': 25, 'Zoe': 22}
+
+# update() : fusionne un autre dict (ou des paires cle=valeur) en place
+age.update({"Chris": 40})            # ajoute/ecrase des cles depuis un dict
+age.update(David=28, Eve=33)         # ou directement en arguments nommes
+
+# Comparer deux dicts : == compare cles ET valeurs, peu importe l'ordre
+{"a": 1, "b": 2} == {"b": 2, "a": 1}     # True
+
+# min / max sur les items : trouver la cle avec la plus petite/grande valeur
+scores = {"Alice": 90, "Bob": 75, "Zoe": 88}
+min(scores, key=scores.get)          # 'Bob'   (cle dont la valeur est minimale)
+max(scores.items(), key=lambda kv: kv[1])   # ('Alice', 90)
+\end{lstlisting}
+
+\begin{infobox}{Compter avec un dict : le reflexe \texttt{Counter}}
+Comme pour les chaines, compter des occurrences dans une liste ou un
+iterable quelconque se fait en une ligne avec \texttt{collections.Counter}
+plutot qu'avec une boucle manuelle et \texttt{get(cle, 0) + 1}.
+\begin{lstlisting}
+from collections import Counter
+
+notes = ["A", "B", "A", "C", "A", "B"]
+compte = Counter(notes)             # Counter({'A': 3, 'B': 2, 'C': 1})
+compte.most_common(1)               # [('A', 3)]  (le plus frequent)
+
+# Counter supporte les operations arithmetiques entre compteurs
+c1 = Counter(["a", "b", "b"])
+c2 = Counter(["b", "c"])
+c1 + c2                             # Counter({'b': 3, 'a': 1, 'c': 1})  (addition)
+c1 - c2                             # Counter({'a': 1, 'b': 1})          (soustraction, sans negatifs)
+\end{lstlisting}
+\end{infobox}
+
+\begin{piege}
+Une cle de dictionnaire doit etre \emph{immuable} (\texttt{hashable}) : \texttt{str},
+\texttt{int}, \texttt{tuple} conviennent, mais une \texttt{list} comme cle leve
+\texttt{TypeError: unhashable type}. Utilise un \texttt{tuple} si tu as besoin
+d'une cle composee, par exemple \texttt{grille[(x, y)] = valeur}.
+\end{piege}
+
+\begin{piege}
+Modifier un dictionnaire (ajouter ou supprimer une cle) \textbf{pendant} qu'on
+le parcourt avec \texttt{for cle in dico} leve \texttt{RuntimeError: dictionary
+changed size during iteration}. Il faut iterer sur une copie des cles
+(\texttt{for cle in list(dico.keys())}) si des suppressions sont necessaires
+pendant la boucle.
+\end{piege}
+
+\subsection{Ensemble (set) -- valeurs uniques}
+Un ensemble ne contient jamais de doublon et n'a pas d'ordre. On l'emploie pour
+eliminer les repetitions (\texttt{set(ma\_liste)}), tester tres vite une
+appartenance, ou faire des operations mathematiques : union (\texttt{|}),
+intersection (\texttt{\&}), difference (\texttt{-}). C'est souvent l'astuce qui
+transforme un algorithme lent en algorithme rapide.
+
+\begin{lstlisting}
+vus = {1, 2, 2, 3}      # {1, 2, 3}
+vus.add(4)
+3 in vus                # True  (appartenance en O(1) moyen)
+{1, 2} & {2, 3}         # {2}   (intersection)
+\end{lstlisting}
+
+\begin{infobox}{Quel type choisir ?}
+Ordre + modifications $\rightarrow$ \textbf{liste}. Donnees fixes $\rightarrow$
+\textbf{tuple}. Correspondance cle/valeur $\rightarrow$ \textbf{dict}. Unicite et
+appartenance rapide $\rightarrow$ \textbf{set}.
+\end{infobox}
+
+% =============================================================================
+\section{Conditions et boucles}
+% =============================================================================
+Les conditions (\texttt{if}/\texttt{elif}/\texttt{else}) et les boucles
+(\texttt{for}, \texttt{while}) controlent le \emph{flux} d'execution : quelles
+instructions s'executent, et combien de fois. En Python, les blocs ne sont pas
+delimites par des accolades mais par l'\textbf{indentation} : tout ce qui est
+decale d'un cran vers la droite appartient au bloc. Une indentation incoherente
+provoque une \texttt{IndentationError}. La boucle \texttt{for} parcourt
+directement les elements d'une sequence (pas des indices) ; \texttt{enumerate}
+fournit en prime la position, et \texttt{range} genere une suite d'entiers.
+
+\begin{lstlisting}
+# Condition
+if n > 0:
+    signe = "positif"
+elif n == 0:
+    signe = "nul"
+else:
+    signe = "negatif"
+
+# Boucle for
+for i in range(3):          # 0, 1, 2
+    print(i)
+
+for i, val in enumerate(["a", "b"]):   # (0,'a') (1,'b')
+    print(i, val)
+
+# Boucle while
+while n > 0:
+    n -= 1
+
+# break / continue / else
+for x in nums:
+    if x == cible:
+        break               # sort de la boucle
+else:
+    print("non trouve")     # execute si pas de break
+\end{lstlisting}
+
+\begin{piege}
+\texttt{range(a, b)} s'arrete a \texttt{b-1} (borne haute exclue). \texttt{range(5)}
+produit \texttt{0,1,2,3,4}.
+\end{piege}
+
+\subsection{Boucler sur chaque structure}
+La boucle \texttt{for} s'adapte a ce qu'elle parcourt : une \texttt{list}
+donne ses elements dans l'ordre, une \texttt{str} donne ses caracteres un a
+un, un \texttt{dict} donne ses \emph{cles} par defaut, et un \texttt{set} donne
+ses elements dans un ordre \textbf{non garanti}. Savoir ce que \texttt{for}
+donne exactement pour chaque structure evite des erreurs de logique
+silencieuses.
+
+\begin{lstlisting}
+# Liste : parcours direct des elements, ou avec index via enumerate
+fruits = ["pomme", "poire", "kiwi"]
+for f in fruits:
+    print(f)
+for i, f in enumerate(fruits):
+    print(i, f)                     # index + valeur
+
+# Chaine : parcours caractere par caractere
+for c in "abc":
+    print(c)                        # 'a' puis 'b' puis 'c'
+
+# Dictionnaire : par defaut, for parcourt les CLES (pas les valeurs)
+age = {"Alice": 30, "Bob": 25}
+for cle in age:                     # equivalent a for cle in age.keys()
+    print(cle)
+for cle, valeur in age.items():     # la forme la plus utile : cle ET valeur
+    print(cle, valeur)
+for valeur in age.values():         # seulement les valeurs
+    print(valeur)
+
+# Set : meme syntaxe que pour une liste, mais l'ORDRE n'est pas garanti
+vus = {3, 1, 2}
+for x in vus:
+    print(x)                        # peut sortir 1, 2, 3 dans un ordre quelconque
+
+# Parcourir plusieurs structures en parallele avec zip
+noms = ["Alice", "Bob"]
+ages = [30, 25]
+for nom, a in zip(noms, ages):
+    print(nom, a)
+\end{lstlisting}
+
+\begin{piege}
+\texttt{for x in dico} donne les \textbf{cles}, jamais les valeurs -- une
+erreur frequente est de croire que \texttt{x} contient la valeur. Pour les
+deux a la fois, utiliser \texttt{dico.items()}. De meme, un \texttt{set}
+n'ayant pas d'ordre garanti, ne jamais ecrire de code qui suppose un ordre
+particulier de parcours (par exemple, comparer deux boucles sur le meme set
+"element par element" a chaque execution).
+\end{piege}
+
+% =============================================================================
+\section{Fonctions}
+% =============================================================================
+Une fonction regroupe un morceau de code reutilisable sous un nom. Elle prend des
+\emph{parametres} en entree et renvoie un resultat avec \texttt{return} (sans
+\texttt{return}, elle renvoie \texttt{None}). Bien decouper un programme en
+petites fonctions au role unique le rend plus lisible, plus facile a tester et a
+deboguer. Python offre des arguments \emph{par defaut}, des arguments
+\emph{nommes} (qui clarifient les appels), et la syntaxe \texttt{*args} /
+\texttt{**kwargs} pour accepter un nombre variable d'arguments.
+
+\begin{lstlisting}
+def salue(nom, salutation="Bonjour"):   # argument par defaut
+    return f"{salutation}, {nom} !"
+
+salue("Alice")                 # 'Bonjour, Alice !'
+salue("Bob", "Salut")          # 'Salut, Bob !'
+salue(nom="Zoe")               # argument nomme
+
+# Nombre variable d'arguments
+def total(*args, **kwargs):    # args = tuple, kwargs = dict
+    return sum(args)
+
+total(1, 2, 3)                 # 6
+
+# Fonction anonyme (lambda)
+carre = lambda x: x * x
+sorted(mots, key=lambda m: len(m))     # trier par longueur
+\end{lstlisting}
+
+\begin{piege}
+Ne jamais utiliser un objet \emph{mutable} comme valeur par defaut :
+\texttt{def f(x, liste=[])} partage la meme liste entre les appels. Ecris
+\texttt{def f(x, liste=None): liste = liste or []}.
+\end{piege}
+
+% =============================================================================
+\section{Portee des variables (scope)}
+% =============================================================================
+\begin{lstlisting}
+compteur = 0                   # variable globale
+
+def incr():
+    global compteur            # sinon : variable locale
+    compteur += 1
+
+def exterieure():
+    x = 10
+    def interieure():
+        nonlocal x             # modifie x de la fonction englobante
+        x += 1
+    interieure()
+    return x                   # 11
+\end{lstlisting}
+
+\begin{infobox}{Regle LEGB}
+Python cherche un nom dans cet ordre : \textbf{L}ocal $\rightarrow$
+\textbf{E}nglobant $\rightarrow$ \textbf{G}lobal $\rightarrow$ \textbf{B}uilt-in.
+\end{infobox}
+
+% =============================================================================
+\section{Classes et objets}
+% =============================================================================
+Une \emph{classe} est un modele (un plan) qui decrit des donnees (les
+\emph{attributs}) et des comportements (les \emph{methodes}). Un \emph{objet} est
+une instance concrete de ce modele. Le premier parametre de chaque methode,
+\texttt{self}, designe l'objet sur lequel on travaille ; la methode speciale
+\texttt{\_\_init\_\_} est le \emph{constructeur}, appele automatiquement a la
+creation. La \emph{programmation orientee objet} permet de regrouper l'etat et le
+comportement au meme endroit, et l'\emph{heritage} (via \texttt{super()}) de
+reutiliser et specialiser une classe existante sans la reecrire.
+
+\begin{lstlisting}
+class Compte:
+    taux = 0.02                     # attribut de classe (partage)
+
+    def __init__(self, solde):      # constructeur
+        self.solde = solde          # attribut d'instance
+
+    def deposer(self, montant):     # methode
+        self.solde += montant
+
+    def __str__(self):              # representation lisible
+        return f"Compte({self.solde} EUR)"
+
+c = Compte(100)
+c.deposer(50)
+print(c)                            # Compte(150 EUR)
+
+# Heritage
+class ComptePremium(Compte):
+    def __init__(self, solde, bonus):
+        super().__init__(solde)     # appelle le parent
+        self.bonus = bonus
+\end{lstlisting}
+
+\begin{piege}
+Oublier \texttt{self} en premier parametre des methodes leve
+\texttt{TypeError: ... takes 0 positional arguments but 1 was given}.
+\end{piege}
+
+% =============================================================================
+\section{Gestion des erreurs (exceptions)}
+% =============================================================================
+Une erreur non geree arrete le programme et affiche une \emph{traceback}. Plutot
+que de la subir, on peut l'\emph{anticiper} : le bloc \texttt{try} contient le
+code risque, et chaque \texttt{except} rattrape un type d'erreur precis pour
+reagir proprement. C'est la difference entre un programme qui plante brutalement
+et un programme robuste qui affiche un message clair et continue. Le bloc
+\texttt{else} s'execute si aucune erreur n'est survenue, et \texttt{finally}
+s'execute \emph{toujours} (succes ou echec) -- ideal pour liberer une ressource,
+fermer un fichier ou une connexion. On peut aussi \emph{declencher} soi-meme une
+erreur avec \texttt{raise} quand une donnee est invalide.
+
+\begin{lstlisting}
+try:
+    x = int(input("Nombre : "))
+    resultat = 10 / x
+except ValueError:                 # conversion impossible
+    print("Ce n'est pas un entier.")
+except ZeroDivisionError:          # division par zero
+    print("Division par zero interdite.")
+except Exception as e:             # filet de securite
+    print(f"Erreur inattendue : {e}")
+else:
+    print("Tout s'est bien passe :", resultat)
+finally:
+    print("Toujours execute (nettoyage).")
+
+# Lever sa propre exception
+def racine(x):
+    if x < 0:
+        raise ValueError("x doit etre positif")
+    return x ** 0.5
+\end{lstlisting}
+
+\begin{piege}
+Evite \texttt{except:} tout seul (attrape meme \texttt{Ctrl+C}). Attrape
+toujours le type le plus precis possible, et place les \texttt{except} du plus
+specifique au plus general.
+\end{piege}
+
+% =============================================================================
+\section{Les erreurs Python les plus frequentes}
+% =============================================================================
+Savoir \emph{lire} une erreur fait gagner un temps precieux : le nom de
+l'exception dit \emph{quel genre} de probleme s'est produit, et le message dit
+\emph{ou} et \emph{pourquoi}. Voici les exceptions que tu rencontreras le plus
+souvent en debutant. Prends l'habitude d'associer chaque nom a sa cause typique :
+avec un peu de pratique, tu diagnostiqueras la plupart des bugs en lisant
+simplement la premiere ligne du message.
+
+\renewcommand{\arraystretch}{1.35}
+\begin{longtable}{>{\raggedright\arraybackslash}p{4.2cm}
+                  >{\raggedright\arraybackslash}p{8.6cm}}
+\rowcolor{primary}
+\textbf{\color{white}Exception} & \textbf{\color{white}Cause typique} \\
+\hline
+\texttt{SyntaxError}       & Faute de syntaxe (\texttt{:} oublie, parenthese non fermee). \\
+\texttt{IndentationError}  & Indentation incorrecte ou incoherente (espaces vs tabulations). \\
+\texttt{NameError}         & Variable utilisee avant d'etre definie. \\
+\texttt{TypeError}         & Operation entre types incompatibles (\texttt{"a" + 1}). \\
+\texttt{ValueError}        & Bon type mais valeur invalide (\texttt{int("abc")}). \\
+\texttt{IndexError}        & Indice hors des bornes d'une liste. \\
+\texttt{KeyError}          & Cle absente d'un dictionnaire. \\
+\texttt{AttributeError}    & Attribut/methode inexistant sur un objet. \\
+\texttt{ZeroDivisionError} & Division ou modulo par zero. \\
+\texttt{ImportError}       & Module ou nom introuvable a l'import. \\
+\texttt{RecursionError}    & Recursion trop profonde (cas de base manquant). \\
+\end{longtable}
+
+\begin{infobox}{Lire une traceback}
+Lis-la \textbf{de bas en haut} : la derniere ligne donne le type d'erreur et le
+message ; remonte pour trouver le fichier et la ligne exacte ou elle s'est
+produite.
+\end{infobox}
+
+% =============================================================================
+\section{Modules et imports}
+% =============================================================================
+Un \emph{module} est un fichier Python que l'on peut reutiliser dans un autre
+grace a \texttt{import}. La \emph{bibliotheque standard} fournit deja des
+centaines de modules prets a l'emploi (\texttt{math}, \texttt{collections},
+\texttt{datetime}, \texttt{random}\ldots) -- inutile de reinventer la roue. On
+peut importer un module entier, seulement certains noms (\texttt{from ... import
+...}), ou lui donner un alias plus court (\texttt{import numpy as np}). Le test
+\texttt{if \_\_name\_\_ == "\_\_main\_\_":} permet qu'un fichier serve a la fois
+de programme executable et de module importable.
+
+\begin{lstlisting}
+import math
+math.sqrt(16)                      # 4.0
+
+from collections import Counter, defaultdict
+Counter("aab")                     # Counter({'a': 2, 'b': 1})
+
+import datetime as dt              # alias
+dt.date.today()
+
+# Point d'entree d'un script
+if __name__ == "__main__":
+    main()                         # execute seulement si lance directement
+\end{lstlisting}
+
+% =============================================================================
+\section{Iterateurs et generateurs}
+% =============================================================================
+Un \emph{iterateur} est un objet que l'on peut parcourir element par element avec
+une boucle \texttt{for}. Un \emph{generateur} est la facon la plus simple d'en
+creer un : c'est une fonction qui, au lieu de \texttt{return}, utilise
+\texttt{yield} pour livrer ses valeurs \emph{une a une}, en se mettant en pause
+entre chaque. Cette approche \emph{paresseuse} (lazy) ne calcule la valeur
+suivante qu'au moment ou on en a besoin : la memoire consommee reste constante,
+meme pour parcourir des millions d'elements ou un flux potentiellement infini.
+
+\begin{lstlisting}
+def compte_jusqua(n):
+    i = 0
+    while i < n:
+        yield i                    # renvoie une valeur et se met en pause
+        i += 1
+
+for v in compte_jusqua(3):         # 0, 1, 2
+    print(v)
+
+# Expression generatrice (parentheses au lieu de crochets)
+somme = sum(x*x for x in range(1000))   # ne cree pas la liste intermediaire
+\end{lstlisting}
+
+\begin{infobox}{Interet}
+Ideal pour de gros flux de donnees : la memoire reste constante quel que soit le
+nombre d'elements parcourus.
+\end{infobox}
+
+% =============================================================================
+\section{Decorateurs}
+% =============================================================================
+Un decorateur est une fonction qui \emph{enveloppe} une autre fonction pour lui
+ajouter un comportement (journalisation, mesure de temps, mise en cache,
+verification des droits\ldots) \textbf{sans toucher a son code}. C'est possible
+parce qu'en Python les fonctions sont des \emph{objets de premiere classe} : on
+peut les passer en argument, les renvoyer, et les stocker dans des variables. La
+syntaxe \texttt{@decorateur} placee au-dessus d'une fonction est simplement un
+raccourci pour \texttt{ma\_fonction = decorateur(ma\_fonction)}. Le decorateur
+renvoie une fonction \emph{wrapper} qui execute du code avant et/ou apres la
+fonction d'origine. On l'utilise partout ou l'on veut appliquer le meme
+traitement a plusieurs fonctions sans dupliquer ce code.
+
+\begin{lstlisting}
+import functools
+import time
+
+def chronometre(func):
+    @functools.wraps(func)             # conserve nom / docstring
+    def wrapper(*args, **kwargs):
+        debut = time.perf_counter()
+        resultat = func(*args, **kwargs)
+        duree = time.perf_counter() - debut
+        print(f"{func.__name__} a pris {duree:.4f}s")
+        return resultat
+    return wrapper
+
+@chronometre                            # equivaut a : lent = chronometre(lent)
+def lent():
+    time.sleep(0.1)
+
+lent()      # affiche : lent a pris 0.10xx s
+\end{lstlisting}
+
+\subsection{Decorateurs integres utiles}
+\begin{lstlisting}
+from functools import lru_cache
+
+@lru_cache(maxsize=None)                # memoise les resultats
+def fib(n):
+    return n if n < 2 else fib(n-1) + fib(n-2)
+
+class Cercle:
+    def __init__(self, r):
+        self._r = r
+
+    @property                           # acces comme un attribut
+    def aire(self):
+        return 3.14159 * self._r ** 2
+
+    @staticmethod                       # pas de self
+    def unite():
+        return "cm"
+\end{lstlisting}
+
+\begin{piege}
+Sans \texttt{@functools.wraps}, la fonction decoree perd son nom et sa docstring
+(\texttt{func.\_\_name\_\_} devient \texttt{'wrapper'}), ce qui gene le debogage.
+\end{piege}
+
+\newpage
+% =============================================================================
+\section{Fiche recapitulative}
+% =============================================================================
+\renewcommand{\arraystretch}{1.35}
+\begin{longtable}{>{\raggedright\arraybackslash}p{4.5cm}
+                  >{\raggedright\arraybackslash}p{8.3cm}}
+\rowcolor{primary}
+\textbf{\color{white}Concept} & \textbf{\color{white}A retenir} \\
+\hline
+Typage            & Dynamique et fort ; \texttt{type(x)}, \texttt{isinstance(x, T)}. \\
+\texttt{/} vs \texttt{//} & \texttt{/} = float ; \texttt{//} = division entiere. \\
+Immuable          & \texttt{str}, \texttt{tuple}, \texttt{int} ne se modifient pas. \\
+Comprehension     & \texttt{[f(x) for x in it if cond]}. \\
+\texttt{==} vs \texttt{is} & valeur vs identite ; \texttt{is} avec \texttt{None}. \\
+Defaut mutable    & Ne jamais mettre \texttt{[]} ou \texttt{\{\}} en defaut. \\
+Exceptions        & \texttt{try/except/else/finally} ; du specifique au general. \\
+Traceback         & Se lit de bas en haut. \\
+Generateur        & \texttt{yield} : valeurs paresseuses, memoire constante. \\
+Decorateur        & Enveloppe une fonction ; \texttt{@functools.wraps}. \\
+\texttt{lru\_cache}   & Memoisation automatique des appels. \\
+\texttt{\_\_main\_\_}   & \texttt{if \_\_name\_\_ == "\_\_main\_\_":} pour le point d'entree. \\
+\end{longtable}
+
+\vspace{0.6cm}
+\begin{infobox}{Methode pour deboguer un probleme}
+\begin{enumerate}[leftmargin=*,itemsep=2pt,topsep=2pt]
+  \item Lire le \textbf{type} d'exception et le message (derniere ligne).
+  \item Localiser le \textbf{fichier} et la \textbf{ligne} dans la traceback.
+  \item Afficher les valeurs suspectes (\texttt{print} ou \texttt{breakpoint()}).
+  \item Reproduire avec un \textbf{petit} exemple minimal.
+  \item Corriger, puis verifier les \textbf{cas limites} (vide, zero, negatif).
+\end{enumerate}
+\end{infobox}
+
+\end{document}

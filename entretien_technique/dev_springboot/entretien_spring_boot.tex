@@ -1,0 +1,905 @@
+% =====================================================================
+%  Guide de preparation -- Entretien technique Java / Spring Boot Junior
+%  Couvre : Java Core, Spring Core, Spring Boot, REST, JPA/Hibernate,
+%           SQL, Spring Security, Maven, Git, Docker, Tests, Design
+%           Patterns, Questions projet, Pieges classiques, Live coding
+%  Compilation : pdflatex entretien_spring_boot.tex  (x2 pour le sommaire)
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+
+% ---- Encodage & langue -------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+
+% ---- Mise en page ------------------------------------------------------
+\usepackage[a4paper,margin=2.2cm]{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\tcbuselibrary{skins,breakable}
+
+% ---- Couleurs (palette Spring : vert) -----------------------------------
+\definecolor{springgreen}{RGB}{109,179,63}
+\definecolor{springdark}{RGB}{56,88,40}
+\definecolor{darkgray}{RGB}{51,51,51}
+\definecolor{lightgray}{RGB}{245,245,245}
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{kwcolor}{RGB}{0,102,153}
+\definecolor{strcolor}{RGB}{163,21,21}
+\definecolor{comcolor}{RGB}{0,128,0}
+\definecolor{piegebg}{RGB}{255,244,229}
+\definecolor{piegeframe}{RGB}{230,126,34}
+\definecolor{clebg}{RGB}{232,245,233}
+\definecolor{cleframe}{RGB}{46,125,50}
+\definecolor{qbg}{RGB}{232,240,254}
+\definecolor{qframe}{RGB}{25,103,210}
+\definecolor{rbg}{RGB}{240,248,240}
+\definecolor{rframe}{RGB}{109,179,63}
+\definecolor{codingbg}{RGB}{247,240,255}
+\definecolor{codingframe}{RGB}{124,77,255}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=springdark,
+  urlcolor=springdark,
+  citecolor=springdark,
+  pdftitle={Guide Entretien Technique Java Spring Boot},
+  pdfauthor={Fiche de preparation entretien}
+}
+
+% ---- En-tetes / pieds de page -----------------------------------------
+\setlength{\headheight}{24pt}
+\addtolength{\topmargin}{-12pt}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{springdark}{Entretien Technique -- Java / Spring Boot}}
+\fancyhead[R]{\small\thepage}
+\fancyfoot[C]{\small\textit{Guide de preparation -- Software Engineer Junior}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{springgreen}\leaders\hrule height \headrulewidth\hfill}}
+
+% ---- Style des titres --------------------------------------------------
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{springdark}}
+  {\thesection.}{0.6em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{darkgray}}
+  {\thesubsection}{0.6em}{}
+
+% ---- Style du code -----------------------------------------------------
+\lstdefinestyle{javastyle}{
+  language=Java,
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{kwcolor}\bfseries,
+  stringstyle=\color{strcolor},
+  commentstyle=\color{comcolor}\itshape,
+  numbers=left, numberstyle=\tiny\color{gray}, numbersep=8pt,
+  showstringspaces=false, breaklines=true, frame=single,
+  rulecolor=\color{gray!40}, tabsize=2, captionpos=b,
+  morekeywords={String,Optional,List,Map,Stream,Autowired,Override}
+}
+\lstdefinestyle{sqlstyle}{
+  language=SQL,
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{kwcolor}\bfseries,
+  stringstyle=\color{strcolor},
+  commentstyle=\color{comcolor}\itshape,
+  numbers=left, numberstyle=\tiny\color{gray}, numbersep=8pt,
+  showstringspaces=false, breaklines=true, frame=single,
+  rulecolor=\color{gray!40}, tabsize=2, captionpos=b
+}
+\lstset{style=javastyle}
+
+% ---- Environnements encadres ------------------------------------------
+\newtcolorbox{question}[1][]{
+  breakable, colback=qbg, colframe=qframe,
+  fonttitle=\bfseries, title={Q. #1},
+  boxrule=1pt, arc=2mm, left=3mm, right=3mm, top=2mm, bottom=2mm
+}
+\newtcolorbox{reponse}[1][Reponse attendue]{
+  breakable, colback=rbg, colframe=rframe,
+  fonttitle=\bfseries, title={#1},
+  boxrule=1pt, arc=2mm, left=3mm, right=3mm, top=2mm, bottom=2mm
+}
+\newtcolorbox{piege}[1][]{
+  breakable, colback=piegebg, colframe=piegeframe,
+  fonttitle=\bfseries, title={Piege classique #1},
+  boxrule=1pt, arc=2mm, left=3mm, right=3mm, top=2mm, bottom=2mm
+}
+\newtcolorbox{cle}[1][]{
+  breakable, colback=clebg, colframe=cleframe,
+  fonttitle=\bfseries, title={A retenir #1},
+  boxrule=1pt, arc=2mm, left=3mm, right=3mm, top=2mm, bottom=2mm
+}
+\newtcolorbox{coding}[1][Exercice de code]{
+  breakable, colback=codingbg, colframe=codingframe,
+  fonttitle=\bfseries, title={#1},
+  boxrule=1pt, arc=2mm, left=3mm, right=3mm, top=2mm, bottom=2mm
+}
+
+% Raccourci pour une paire question/reponse rapide (une ligne chacune)
+\newcommand{\qr}[2]{%
+  \par\noindent\textbf{Q~:} #1\par
+  \noindent\textbf{R~:} #2\par\smallskip
+}
+
+% =====================================================================
+\begin{document}
+
+% ---------------------------------------------------------------- TITRE
+\begin{titlepage}
+  \centering
+  \vspace*{2cm}
+  {\Huge\bfseries\color{springdark} Guide de Preparation\par}
+  \vspace{0.5cm}
+  {\LARGE\bfseries\color{springgreen} Entretien Technique Java / Spring Boot\par}
+  \vspace{0.3cm}
+  {\Large Software Engineer Junior (0--2 ans d'experience)\par}
+  \vspace{1.5cm}
+  {\large Environ 150 questions-reponses classees par theme\par}
+  \vspace{0.3cm}
+  {\large Java Core -- Spring Core -- Spring Boot -- REST API -- JPA/Hibernate\par}
+  {\large SQL -- Spring Security -- Maven -- Git -- Docker -- Tests -- Design Patterns\par}
+  \vfill
+  {\normalsize\textit{A utiliser comme support de revision active : cachez la reponse et essayez de la reformuler a voix haute avant de la lire.}\par}
+  \vspace{1cm}
+  {\small Fiche de preparation personnelle\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% =====================================================================
+\section{Java Core}
+% =====================================================================
+
+\subsection{Variables et types}
+
+\begin{question} Quelle est la difference entre un type primitif et un objet en Java ?
+\end{question}
+\begin{reponse}
+Un type primitif (\texttt{int}, \texttt{boolean}, \texttt{double}, \texttt{char}, ...) stocke directement sa valeur sur la pile (stack) et n'est pas nullable. Un objet (\texttt{Integer}, \texttt{String}, ...) est une reference vers une zone memoire sur le tas (heap) ; il peut valoir \texttt{null}, possede des methodes, et transite par les wrapper classes pour l'autoboxing/unboxing avec les collections generiques.
+\end{reponse}
+
+\begin{question} Pourquoi la classe \texttt{String} est-elle immuable en Java ?
+\end{question}
+\begin{reponse}
+Trois raisons principales : (1) securite -- une \texttt{String} passee en parametre ne peut pas etre modifiee a l'insu de l'appelant (utile pour les mots de passe, les noms de classe en reflexion) ; (2) le \emph{String Pool} peut reutiliser en toute securite la meme instance pour deux litteraux identiques, economisant de la memoire ; (3) thread-safety native, sans synchronisation, puisqu'un objet immuable ne peut jamais etre dans un etat incoherent partage entre threads.
+\end{reponse}
+
+\begin{question} \texttt{StringBuilder} vs \texttt{StringBuffer} : quelle difference ?
+\end{question}
+\begin{reponse}
+Les deux sont mutables et servent a concatener efficacement des chaines sans recreer un nouvel objet a chaque \texttt{+=}. \texttt{StringBuffer} est \textbf{synchronized} (thread-safe mais plus lent), tandis que \texttt{StringBuilder} ne l'est pas (plus rapide, a utiliser des qu'on est dans un contexte mono-thread, ce qui est le cas la grande majorite du temps).
+\end{reponse}
+
+\begin{question} Quelle est la difference entre \texttt{==} et \texttt{.equals()} ?
+\end{question}
+\begin{reponse}
+\texttt{==} compare des references (l'adresse memoire) pour les objets, ou la valeur brute pour les primitifs. \texttt{.equals()} est une methode qui, par defaut (dans \texttt{Object}), fait la meme chose que \texttt{==}, mais qui est souvent redefinie (ex: dans \texttt{String}, \texttt{Integer}) pour comparer le contenu logique des objets.
+\end{reponse}
+
+\begin{piege}
+\texttt{new String("abc") == "abc"} renvoie \texttt{false} (deux objets differents), alors que \texttt{"abc" == "abc"} renvoie \texttt{true} grace au String Pool. C'est un exemple classique en entretien pour verifier qu'on comprend la difference reference/valeur.
+\end{piege}
+
+\begin{question} A quoi sert \texttt{hashCode()} et quel est son lien avec \texttt{equals()} ?
+\end{question}
+\begin{reponse}
+\texttt{hashCode()} retourne un entier utilise par les structures de type table de hachage (\texttt{HashMap}, \texttt{HashSet}) pour placer rapidement un objet dans un "bucket". Le contrat impose : si \texttt{a.equals(b)} est vrai, alors \texttt{a.hashCode() == b.hashCode()} doit etre vrai. L'inverse n'est pas obligatoire (deux objets differents peuvent avoir le meme hash : c'est une \emph{collision}). Si on redefinit \texttt{equals()} sans redefinir \texttt{hashCode()}, on casse ce contrat et les collections a base de hash deviennent incoherentes.
+\end{reponse}
+
+\subsection{Programmation orientee objet}
+
+\begin{question} Quels sont les 4 principes fondamentaux de la POO ?
+\end{question}
+\begin{reponse}
+\textbf{Encapsulation} (cacher l'etat interne derriere des methodes publiques), \textbf{heritage} (reutiliser/etendre un comportement via \texttt{extends}), \textbf{polymorphisme} (une meme methode se comporte differemment selon le type reel de l'objet, via \texttt{@Override}) et \textbf{abstraction} (exposer un contrat sans exposer les details d'implementation, via interfaces/classes abstraites).
+\end{reponse}
+
+\begin{question} Heritage vs composition : quand choisir l'un ou l'autre ?
+\end{question}
+\begin{reponse}
+L'heritage exprime une relation "est-un" (\emph{is-a}) et cree un couplage fort avec la classe parente (fragile base class problem). La composition exprime une relation "a-un" (\emph{has-a}) : on injecte un objet collaborateur au lieu d'en heriter, ce qui est plus flexible et plus facile a tester. Regle generale largement acceptee : "\emph{Favor composition over inheritance}" -- Spring lui-meme repose massivement sur la composition via l'injection de dependances.
+\end{reponse}
+
+\begin{question} Interface vs classe abstraite : quelle difference et quand utiliser chacune ?
+\end{question}
+\begin{reponse}
+Une interface definit un contrat pur (avant Java 8, aucune implementation ; depuis Java 8, elle peut avoir des methodes \texttt{default}/\texttt{static}) et une classe peut implementer plusieurs interfaces. Une classe abstraite peut avoir un etat (champs), des constructeurs et du code partage, mais une classe ne peut en etendre qu'une seule. On utilise une interface pour definir une capacite (\texttt{Comparable}, \texttt{Runnable}) et une classe abstraite quand plusieurs sous-classes partagent une implementation commune non triviale.
+\end{reponse}
+
+\begin{question} Qu'est-ce que le polymorphisme et comment se manifeste-t-il en Java ?
+\end{question}
+\begin{reponse}
+C'est la capacite d'appeler une methode sur une reference de type parent/interface et de voir s'executer l'implementation de la classe reelle de l'objet (\emph{polymorphisme dynamique}, resolu a l'execution via la table des methodes virtuelles). Spring l'exploit constamment : on programme contre des interfaces (\texttt{List}, \texttt{Repository}) et le conteneur injecte l'implementation concrete.
+\end{reponse}
+
+\subsection{Collections}
+
+\begin{question} \texttt{ArrayList} vs \texttt{LinkedList} : quelle difference et quand utiliser chacune ?
+\end{question}
+\begin{reponse}
+\texttt{ArrayList} est adosse a un tableau redimensionnable : acces par indice en $O(1)$, mais insertion/suppression au milieu couteuse en $O(n)$ (decalage des elements). \texttt{LinkedList} est une liste doublement chainee : insertion/suppression en $O(1)$ si on a deja le noeud (ex: en tete/queue), mais acces par indice en $O(n)$. En pratique, \texttt{ArrayList} est le choix par defaut dans 90\% des cas car les acces sequentiels/aleatoires dominent.
+\end{reponse}
+
+\begin{question} Comment fonctionne une \texttt{HashMap} en interne ?
+\end{question}
+\begin{reponse}
+Une \texttt{HashMap} stocke un tableau de "buckets". Pour inserer une paire cle/valeur, on calcule \texttt{hashCode()} de la cle, on applique un spreading de bits pour reduire les collisions, puis on prend le modulo de la taille du tableau pour trouver le bucket. Depuis Java 8, si un bucket contient plus de 8 elements, la liste chainee interne se transforme en arbre rouge-noir pour garder une recherche en $O(\log n)$ au lieu de $O(n)$ dans le pire cas.
+\end{reponse}
+
+\begin{question} Pourquoi dit-on que \texttt{HashMap} offre du $O(1)$ en moyenne ?
+\end{question}
+\begin{reponse}
+Parce qu'en l'absence de collisions, trouver le bon bucket via le hash puis acceder a l'element est un temps constant, independant du nombre d'elements stockes. C'est une complexite \emph{amortie moyenne} : dans le pire cas (toutes les cles dans le meme bucket), cela degenere en $O(\log n)$ (arbre) ou $O(n)$ (liste chainee avant Java 8).
+\end{reponse}
+
+\begin{question} Que se passe-t-il si deux cles differentes ont le meme \texttt{hashCode()} ?
+\end{question}
+\begin{reponse}
+C'est une \emph{collision} : les deux entrees atterrissent dans le meme bucket. La \texttt{HashMap} les stocke toutes les deux dans ce bucket (liste chainee ou arbre) et utilise \texttt{equals()} pour les distinguer lors d'une recherche -- elle parcourt le bucket et compare chaque cle avec \texttt{equals()} jusqu'a trouver la bonne.
+\end{reponse}
+
+\begin{question} \texttt{HashSet} vs \texttt{TreeSet} : quelle difference ?
+\end{question}
+\begin{reponse}
+\texttt{HashSet} est adosse a une \texttt{HashMap} : pas d'ordre garanti, insertion/recherche en $O(1)$ moyen. \texttt{TreeSet} est adosse a un arbre rouge-noir (\texttt{TreeMap}) : les elements sont toujours tries (ordre naturel ou via \texttt{Comparator}), mais les operations sont en $O(\log n)$.
+\end{reponse}
+
+\begin{question} A quoi sert \texttt{ConcurrentHashMap} et en quoi differe-t-elle d'une \texttt{HashMap} synchronisee ?
+\end{question}
+\begin{reponse}
+\texttt{ConcurrentHashMap} permet des lectures/ecritures concurrentes sans bloquer toute la map : elle segmente les verrous au niveau des buckets (au lieu d'un verrou global comme \texttt{Collections.synchronizedMap()}), ce qui offre un bien meilleur debit en environnement multi-thread. Elle ne leve jamais de \texttt{ConcurrentModificationException} lors d'une iteration concurrente avec une modification.
+\end{reponse}
+
+\subsection{Exceptions}
+
+\begin{question} Quelle est la difference entre \emph{checked} et \emph{unchecked exception} ?
+\end{question}
+\begin{reponse}
+Une \emph{checked exception} (heritant de \texttt{Exception} mais pas de \texttt{RuntimeException}, ex: \texttt{IOException}) doit obligatoirement etre geree (try/catch) ou declaree (\texttt{throws}) a la compilation -- elle represente une condition anticipable et recuperable. Une \emph{unchecked exception} (heritant de \texttt{RuntimeException}, ex: \texttt{NullPointerException}) n'a pas besoin d'etre declaree -- elle signale generalement un bug de programmation. Spring, par convention, ne leve que des unchecked exceptions dans son ecosysteme (ex: \texttt{DataAccessException}).
+\end{reponse}
+
+\begin{question} A quoi sert le \texttt{try-with-resources} ?
+\end{question}
+\begin{reponse}
+Il garantit la fermeture automatique de toute ressource implementant \texttt{AutoCloseable} (flux, connexion JDBC, ...) a la sortie du bloc \texttt{try}, meme en cas d'exception, sans avoir a ecrire de bloc \texttt{finally} manuel avec un \texttt{close()} risquant lui-meme de lever une exception.
+\end{reponse}
+
+\begin{question} Le bloc \texttt{finally} est-il toujours execute ?
+\end{question}
+\begin{reponse}
+Presque toujours -- y compris si un \texttt{return} est present dans le \texttt{try} ou le \texttt{catch}. Les seules exceptions sont : un appel a \texttt{System.exit()}, un crash de la JVM, ou un thread tue de force. Piege classique : si \texttt{finally} contient lui-meme un \texttt{return}, il ecrase silencieusement la valeur de retour ou l'exception du \texttt{try}/\texttt{catch}.
+\end{reponse}
+
+\subsection{Java 8+ (Lambdas, Stream API, Optional)}
+
+\begin{question} Qu'est-ce qu'une expression lambda et a quoi sert-elle ?
+\end{question}
+\begin{reponse}
+C'est une syntaxe concise pour implementer une interface fonctionnelle (une interface avec une seule methode abstraite, ex: \texttt{Runnable}, \texttt{Comparator}, \texttt{Function<T,R>}) sans classe anonyme. Elle rend le code fonctionnel (Stream API, callbacks) beaucoup plus lisible.
+\end{reponse}
+
+\begin{lstlisting}
+List<String> noms = users.stream()
+        .filter(u -> u.getAge() > 18)
+        .map(User::getName)
+        .sorted()
+        .collect(Collectors.toList());
+\end{lstlisting}
+
+\begin{question} Quelle est la difference entre \texttt{map()} et \texttt{flatMap()} dans la Stream API ?
+\end{question}
+\begin{reponse}
+\texttt{map()} transforme chaque element en un autre element (relation 1-vers-1), par exemple \texttt{String -> Integer}. \texttt{flatMap()} transforme chaque element en un \emph{Stream}, puis aplatit tous ces streams en un seul (relation 1-vers-plusieurs) : utile quand on a une liste de listes et qu'on veut obtenir une seule liste "aplatie".
+\end{reponse}
+
+\begin{question} A quoi servent \texttt{filter()} et \texttt{reduce()} ?
+\end{question}
+\begin{reponse}
+\texttt{filter()} garde uniquement les elements verifiant un predicat (\texttt{Predicate<T>}). \texttt{reduce()} combine tous les elements d'un stream en une seule valeur en appliquant successivement une fonction binaire (ex: sommer une liste d'entiers : \texttt{stream.reduce(0, Integer::sum)}).
+\end{reponse}
+
+\begin{question} Pourquoi utiliser \texttt{Optional} plutot que de retourner \texttt{null} ?
+\end{question}
+\begin{reponse}
+\texttt{Optional<T>} rend explicite, au niveau du type de retour, qu'une valeur peut etre absente -- l'appelant est donc oblige de gerer ce cas (\texttt{isPresent()}, \texttt{orElse()}, \texttt{map()}) au lieu de risquer une \texttt{NullPointerException} silencieuse plus loin dans le code. C'est un outil de \emph{design} pour les valeurs de retour, pas pour les champs d'entite ou les parametres de methode (a eviter dans ces cas selon les conventions Java).
+\end{reponse}
+
+\subsection{Multithreading}
+
+\begin{question} \texttt{Thread} vs \texttt{Runnable} vs \texttt{Callable} : quelle difference ?
+\end{question}
+\begin{reponse}
+\texttt{Thread} est la classe representant un fil d'execution reel. \texttt{Runnable} est une interface fonctionnelle (\texttt{void run()}) qui decrit une tache sans valeur de retour ni exception checked -- on la passe a un \texttt{Thread} ou a un \texttt{ExecutorService}. \texttt{Callable<V>} est similaire mais sa methode \texttt{call()} retourne une valeur et peut lever une exception checked, ce qui la rend compatible avec un \texttt{Future<V>}.
+\end{reponse}
+
+\begin{question} Qu'est-ce qu'un \texttt{ExecutorService} et pourquoi l'utiliser plutot que de creer des \texttt{Thread} manuellement ?
+\end{question}
+\begin{reponse}
+C'est un pool de threads reutilisables gere par la JVM : on lui soumet des taches (\texttt{Runnable}/\texttt{Callable}) et il les distribue aux threads disponibles. Cela evite le cout de creation/destruction repetee de threads et permet de limiter le parallelisme (eviter de saturer le systeme). Un \texttt{Future<V>} recupere le resultat asynchrone d'une tache soumise.
+\end{reponse}
+
+\begin{question} Que fait le mot-cle \texttt{synchronized} ?
+\end{question}
+\begin{reponse}
+Il garantit qu'un seul thread a la fois peut executer le bloc/methode protege pour un moniteur (objet verrou) donne, empechant les acces concurrents non controles a une ressource partagee. C'est le mecanisme de base pour eviter les \emph{race conditions}, au prix d'un risque de contention/latence si trop de threads attendent le meme verrou.
+\end{reponse}
+
+\begin{question} Qu'est-ce qu'un \emph{deadlock} et qu'est-ce qu'une \emph{race condition} ?
+\end{question}
+\begin{reponse}
+Une \textbf{race condition} survient quand le resultat d'un programme depend de l'ordre d'execution non deterministe de threads concurrents acedant a un etat partage sans synchronisation correcte. Un \textbf{deadlock} survient quand deux threads (ou plus) s'attendent mutuellement indefiniment, chacun detenant une ressource dont l'autre a besoin (ex: Thread A tient le verrou 1 et attend le verrou 2, pendant que Thread B tient le verrou 2 et attend le verrou 1).
+\end{reponse}
+
+\newpage
+% =====================================================================
+\section{Spring Core}
+% =====================================================================
+
+\begin{question} Qu'est-ce que Spring Framework, en une phrase ?
+\end{question}
+\begin{reponse}
+Un framework Java qui fournit un conteneur d'injection de dependances (IoC container) et un ecosysteme de modules (MVC, Data, Security, ...) permettant de construire des applications faiblement couplees, testables et modulaires sans gerer soi-meme le cycle de vie des objets.
+\end{reponse}
+
+\begin{question} Qu'est-ce que l'Inversion de Controle (IoC) ?
+\end{question}
+\begin{reponse}
+C'est un principe de conception ou le \emph{controle de la creation et du cablage des objets} est delegue a un framework (le conteneur Spring) plutot que d'etre fait manuellement par le code applicatif avec \texttt{new}. Au lieu que la classe \texttt{A} aille elle-meme chercher/creer son dependance \texttt{B}, c'est le conteneur qui lui "fournit" \texttt{B} : le controle du flux est \emph{inverse}.
+\end{reponse}
+
+\begin{question} Qu'est-ce que l'Injection de Dependances (DI) et quels sont ses 3 types ?
+\end{question}
+\begin{reponse}
+La DI est la technique concrete par laquelle l'IoC est realisee : le conteneur \texttt{ApplicationContext} instancie les beans et leur injecte leurs dependances. Les 3 types sont : \textbf{injection par constructeur} (dependances passees en parametres du constructeur), \textbf{injection par setter} (via une methode \texttt{setXxx()} annotee \texttt{@Autowired}), et \textbf{injection par champ} (\texttt{@Autowired} directement sur l'attribut, via reflexion).
+\end{reponse}
+
+\begin{cle}
+L'\textbf{injection par constructeur est recommandee} car : (1) elle permet de declarer les champs \texttt{final} (immutabilite, thread-safety) ; (2) elle rend les dependances obligatoires explicites et empeche de construire un objet dans un etat incomplet ; (3) elle facilite les tests unitaires purs (on peut instancier la classe avec \texttt{new} et des mocks, sans conteneur Spring) ; (4) elle expose immediatement un probleme de conception si le constructeur prend trop de parametres (trop de responsabilites).
+\end{cle}
+
+\begin{lstlisting}
+@Service
+public class OrderService {
+    private final PaymentClient paymentClient; // final -> immuable
+
+    // Depuis Spring 4.3, @Autowired est optionnel
+    // s'il n'y a qu'un seul constructeur
+    public OrderService(PaymentClient paymentClient) {
+        this.paymentClient = paymentClient;
+    }
+}
+\end{lstlisting}
+
+\begin{question} Qu'est-ce qu'un Bean Spring et qui le cree ?
+\end{question}
+\begin{reponse}
+Un \emph{bean} est simplement un objet Java dont le cycle de vie (instanciation, configuration, injection de dependances, destruction) est gere par le conteneur \texttt{ApplicationContext}, et non par le code applicatif. Il est cree soit via un scan de composants (\texttt{@Component} et derives), soit declare explicitement dans une classe \texttt{@Configuration} via une methode annotee \texttt{@Bean}.
+\end{reponse}
+
+\begin{question} Quels sont les principaux scopes de bean, et quelle est la difference entre \emph{singleton} et \emph{prototype} ?
+\end{question}
+\begin{reponse}
+Par defaut, un bean Spring est \textbf{singleton} : une seule instance est creee par conteneur et partagee partout ou elle est injectee. Le scope \textbf{prototype} cree une nouvelle instance a chaque injection/demande. D'autres scopes existent dans un contexte web : \texttt{request} (une instance par requete HTTP) et \texttt{session} (une instance par session utilisateur).
+\end{reponse}
+
+\begin{question} Pouvez-vous decrire le cycle de vie d'un bean Spring ?
+\end{question}
+\begin{reponse}
+Schematiquement : (1) instanciation, (2) injection des dependances (constructeur/setter/champ), (3) appel des \texttt{Aware} interfaces si implementees (ex: \texttt{ApplicationContextAware}), (4) appel de \texttt{@PostConstruct} (ou \texttt{InitializingBean.afterPropertiesSet()}), (5) le bean est pret a l'emploi, (6) a la fermeture du contexte, appel de \texttt{@PreDestroy} (ou \texttt{DisposableBean.destroy()}).
+\end{reponse}
+
+\begin{question} Quelle est la difference entre \texttt{@Component}, \texttt{@Service}, \texttt{@Repository} et \texttt{@Controller} ?
+\end{question}
+\begin{reponse}
+Techniquement, ce sont toutes des specialisations de \texttt{@Component} (le scanner de composants les traite de la meme facon), mais elles portent une intention semantique differente et certaines ajoutent un comportement : \texttt{@Repository} active la traduction automatique des exceptions techniques (JDBC, Hibernate) en \texttt{DataAccessException} Spring uniformes ; \texttt{@Service} marque la couche de logique metier ; \texttt{@Controller} marque un composant MVC qui gere les requetes web. Utiliser la bonne annotation ameliore la lisibilite de l'architecture en couches.
+\end{reponse}
+
+\begin{question} Quelle est la difference entre \texttt{@Configuration} + \texttt{@Bean} et \texttt{@Component} ?
+\end{question}
+\begin{reponse}
+\texttt{@Component} (et derives) marque une classe pour etre auto-detectee et instanciee par le scanner -- on l'utilise pour son \emph{propre} code. \texttt{@Bean}, place sur une methode d'une classe \texttt{@Configuration}, sert a declarer explicitement comme bean un objet qu'on ne peut pas annoter directement (ex: une classe d'une librairie tierce) ou dont la creation necessite de la logique personnalisee.
+\end{reponse}
+
+\newpage
+% =====================================================================
+\section{Spring Boot}
+% =====================================================================
+
+\begin{question} Quelle est la difference entre Spring Framework et Spring Boot ?
+\end{question}
+\begin{reponse}
+Spring Boot ne remplace pas Spring Framework : il s'appuie dessus en ajoutant des \emph{opinionated defaults} pour eliminer la configuration repetitive (plus besoin d'ecrire des kilometres de XML ou de configurer manuellement le \texttt{DispatcherServlet}). Il embarque un serveur (Tomcat/Jetty/Undertow) directement dans l'application (\texttt{jar} executable), fournit l'auto-configuration, et regroupe les dependances via des \emph{starters}.
+\end{reponse}
+
+\begin{question} Que cache l'annotation \texttt{@SpringBootApplication} ?
+\end{question}
+\begin{reponse}
+C'est une annotation composite qui regroupe trois annotations : \texttt{@SpringBootConfiguration} (specialisation de \texttt{@Configuration}, indique que la classe peut declarer des beans), \texttt{@EnableAutoConfiguration} (declenche l'auto-configuration basee sur le classpath) et \texttt{@ComponentScan} (scanne automatiquement les composants du package courant et de ses sous-packages).
+\end{reponse}
+
+\begin{question} Comment fonctionne l'auto-configuration dans Spring Boot ?
+\end{question}
+\begin{reponse}
+Au demarrage, Spring Boot inspecte les JARs presents dans le classpath et les proprietes de configuration, puis active conditionnellement des classes de configuration pre-ecrites grace a des annotations comme \texttt{@ConditionalOnClass} (si telle classe est presente), \texttt{@ConditionalOnMissingBean} (si l'utilisateur n'a pas deja defini son propre bean), \texttt{@ConditionalOnProperty}. Par exemple, si le driver H2 est sur le classpath et qu'aucune \texttt{DataSource} n'est definie manuellement, Spring Boot en cree automatiquement une en memoire.
+\end{reponse}
+
+\begin{piege}
+L'auto-configuration ne \emph{remplace} jamais un bean explicitement defini par le developpeur : elle ne s'active que via \texttt{@ConditionalOnMissingBean}. Si un candidat pose une question du type "j'ai defini mon propre \texttt{DataSource} mais Spring Boot en cree quand meme un deuxieme", la reponse est presque toujours une erreur de configuration (mauvais package scanne, bean mal nomme), pas un bug de l'auto-configuration.
+\end{piege}
+
+\begin{question} Qu'est-ce qu'un Spring Boot Starter ? Citez-en quelques-uns.
+\end{question}
+\begin{reponse}
+Un starter est un descripteur de dependances "tout-en-un" qui regroupe toutes les librairies necessaires a une fonctionnalite, avec des versions compatibles entre elles (gerees via le parent \texttt{spring-boot-starter-parent} ou le BOM). Exemples : \texttt{spring-boot-starter-web} (MVC + Tomcat embarque + Jackson), \texttt{spring-boot-starter-data-jpa} (Hibernate + Spring Data), \texttt{spring-boot-starter-security}, \texttt{spring-boot-starter-test} (JUnit + Mockito + AssertJ).
+\end{reponse}
+
+\begin{question} Quelle est la difference entre \texttt{application.properties} et \texttt{application.yml} ?
+\end{question}
+\begin{reponse}
+Les deux configurent l'application de la meme facon (memes cles, meme mecanisme de chargement) ; \texttt{.yml} utilise une syntaxe hierarchique par indentation, plus lisible pour les configurations imbriquees, alors que \texttt{.properties} utilise des cles a points (\texttt{server.port=8080}). On ne mixe generalement pas les deux dans un meme projet.
+\end{reponse}
+
+\begin{question} Comment injecter une valeur de configuration comme \texttt{server.port} dans une classe ?
+\end{question}
+\begin{reponse}
+Avec \texttt{@Value("\${server.port}")} sur un champ pour une valeur simple, ou en creant une classe annotee \texttt{@ConfigurationProperties(prefix = "...")} pour regrouper plusieurs proprietes liees dans un objet type-safe -- approche recommandee des qu'on a plus de 2-3 proprietes lieees.
+\end{reponse}
+
+\begin{question} A quoi servent les Profiles Spring (\texttt{@Profile}, \texttt{application-dev.yml}) ?
+\end{question}
+\begin{reponse}
+Ils permettent d'activer des beans ou des valeurs de configuration differentes selon l'environnement d'execution (dev, test, prod) sans dupliquer le code. On active un profil via la propriete \texttt{spring.profiles.active=dev} (ou une variable d'environnement), et Spring Boot charge alors \texttt{application.yml} puis le complete/surcharge avec \texttt{application-dev.yml}. En pratique, les secrets de prod (mots de passe, cles API) doivent venir de variables d'environnement plutot que d'etre commit dans un fichier de profil.
+\end{reponse}
+
+\begin{question} L'application met du temps a demarrer ou consomme trop de memoire : que verifiez-vous en premier ?
+\end{question}
+\begin{reponse}
+On active/consulte les endpoints \textbf{Spring Boot Actuator} : \texttt{/actuator/health} (etat global et des dependances comme la base de donnees), \texttt{/actuator/metrics} (JVM, pool de connexions, requetes HTTP), \texttt{/actuator/env} (proprietes effectivement chargees, utile pour detecter une mauvaise config). Cote demarrage, on peut aussi activer le mode debug de l'auto-configuration (\texttt{--debug}) pour voir quelles configurations sont evaluees, ou profiler les beans les plus longs a instancier.
+\end{reponse}
+
+\newpage
+% =====================================================================
+\section{Developpement Web et REST API}
+% =====================================================================
+
+\begin{question} Quelle est la difference entre \texttt{@Controller} et \texttt{@RestController} ?
+\end{question}
+\begin{reponse}
+\texttt{@RestController} = \texttt{@Controller} + \texttt{@ResponseBody}. Avec \texttt{@Controller} seul, le retour d'une methode est interprete comme le nom d'une vue a resoudre (JSP, Thymeleaf). Avec \texttt{@RestController}, la valeur retournee est serialisee directement dans le corps de la reponse HTTP (JSON par defaut via Jackson), ce qui en fait le choix standard pour une API REST.
+\end{reponse}
+
+\begin{question} Quand utiliser GET, POST, PUT, PATCH et DELETE ?
+\end{question}
+\begin{reponse}
+\textbf{GET} : lire une ressource, sans effet de bord (idempotent, cacheable). \textbf{POST} : creer une nouvelle ressource ou declencher une action non idempotente. \textbf{PUT} : remplacer entierement une ressource existante (idempotent : appeler 10 fois donne le meme etat final). \textbf{PATCH} : modifier partiellement une ressource. \textbf{DELETE} : supprimer une ressource (idempotent).
+\end{reponse}
+
+\begin{question} Citez les codes HTTP les plus utilises et leur signification.
+\end{question}
+\begin{reponse}
+\textbf{200 OK} (succes generique), \textbf{201 Created} (creation reussie, souvent avec un header \texttt{Location}), \textbf{204 No Content} (succes sans corps de reponse, ex: DELETE), \textbf{400 Bad Request} (requete invalide, ex: validation echouee), \textbf{401 Unauthorized} (authentification manquante/invalide), \textbf{403 Forbidden} (authentifie mais pas autorise), \textbf{404 Not Found} (ressource inexistante), \textbf{500 Internal Server Error} (erreur cote serveur non geree).
+\end{reponse}
+
+\begin{question} Quelle est la difference entre \texttt{@PathVariable} et \texttt{@RequestParam} ?
+\end{question}
+\begin{reponse}
+\texttt{@PathVariable} extrait une valeur directement depuis le chemin de l'URL (ex: \texttt{/users/\{id\}}), typiquement pour identifier une ressource precise. \texttt{@RequestParam} extrait un parametre de la query string (ex: \texttt{?page=2\&size=10}), typiquement pour du filtrage, du tri ou de la pagination -- des parametres optionnels par nature.
+\end{reponse}
+
+\begin{question} A quoi sert \texttt{@RequestBody} ?
+\end{question}
+\begin{reponse}
+Il indique a Spring de deserialiser le corps de la requete HTTP (generalement du JSON) directement en objet Java, via Jackson. Combine a \texttt{@Valid}, cela declenche aussi la validation Bean Validation sur l'objet deserialise avant l'execution de la methode.
+\end{reponse}
+
+\begin{lstlisting}
+@PostMapping("/users")
+public ResponseEntity<UserDto> create(@Valid @RequestBody UserDto dto) {
+    UserDto saved = userService.create(dto);
+    return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+}
+\end{lstlisting}
+
+\begin{question} Comment valider les donnees entrantes d'une API REST ?
+\end{question}
+\begin{reponse}
+Avec Bean Validation (JSR 380) : on annote les champs du DTO avec \texttt{@NotNull}, \texttt{@NotBlank}, \texttt{@Size}, \texttt{@Email}, etc., puis on ajoute \texttt{@Valid} devant \texttt{@RequestBody} dans le controleur. Si la validation echoue, Spring leve une \texttt{MethodArgumentNotValidException}, qu'on intercepte generalement dans un \texttt{@ControllerAdvice} pour renvoyer une reponse 400 structuree.
+\end{reponse}
+
+\begin{question} Comment gerer les exceptions globalement dans une API REST Spring Boot ?
+\end{question}
+\begin{reponse}
+Avec \texttt{@RestControllerAdvice} (= \texttt{@ControllerAdvice} + \texttt{@ResponseBody}) combine a des methodes \texttt{@ExceptionHandler} : chaque methode intercepte un type d'exception precis et renvoie un code HTTP adapte avec un corps de reponse d'erreur standardise (message, timestamp, code d'erreur), au lieu de laisser fuiter une stack trace ou un code 500 generique.
+\end{reponse}
+
+\begin{lstlisting}
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex) {
+        ErrorResponse body = new ErrorResponse(ex.getMessage(), Instant.now());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
+        String msg = ex.getBindingResult().getFieldError().getDefaultMessage();
+        return ResponseEntity.badRequest().body(new ErrorResponse(msg, Instant.now()));
+    }
+}
+\end{lstlisting}
+
+\newpage
+% =====================================================================
+\section{Spring Data JPA / Hibernate}
+% =====================================================================
+
+\begin{question} Qu'est-ce que Hibernate et pourquoi utiliser JPA plutot que du JDBC direct ?
+\end{question}
+\begin{reponse}
+Hibernate est un \emph{ORM} (Object-Relational Mapping) : il traduit automatiquement les objets Java en lignes de tables SQL et inversement, en generant le SQL a notre place. JPA (Jakarta Persistence API) est la specification standard que Hibernate implemente -- coder contre JPA plutot que l'API native Hibernate permet de rester portable entre implementations. Cela evite d'ecrire du JDBC bas niveau repetitif (mapping manuel des \texttt{ResultSet}, gestion des connexions).
+\end{reponse}
+
+\begin{question} A quoi servent \texttt{@Entity}, \texttt{@Id}, \texttt{@GeneratedValue}, \texttt{@Table} et \texttt{@Column} ?
+\end{question}
+\begin{reponse}
+\texttt{@Entity} marque une classe comme mappee a une table. \texttt{@Id} designe le champ correspondant a la cle primaire. \texttt{@GeneratedValue} delegue la generation de cette cle a la base (auto-increment, sequence...). \texttt{@Table(name = "...")} et \texttt{@Column(name = "...")} permettent de personnaliser le nom de la table/colonne quand il differe du nom de la classe/du champ Java.
+\end{reponse}
+
+\begin{question} Quelle est la difference entre \texttt{CrudRepository}, \texttt{PagingAndSortingRepository} et \texttt{JpaRepository} ?
+\end{question}
+\begin{reponse}
+C'est une hierarchie d'interfaces qui s'enrichissent : \texttt{CrudRepository} fournit les operations CRUD de base (\texttt{save}, \texttt{findById}, \texttt{deleteById}...). \texttt{PagingAndSortingRepository} l'etend avec la pagination et le tri (\texttt{findAll(Pageable)}). \texttt{JpaRepository} etend les deux et ajoute des fonctionnalites specifiques a JPA, comme \texttt{flush()} (forcer la synchronisation avec la base), \texttt{saveAndFlush()}, ou \texttt{deleteAllInBatch()} (suppression en une seule requete SQL au lieu d'une par entite).
+\end{reponse}
+
+\begin{question} Comment fonctionne une methode comme \texttt{findByName(String name)} sans aucune implementation ecrite ?
+\end{question}
+\begin{reponse}
+Spring Data parse le nom de la methode a la creation du proxy du repository (au demarrage) et en deduit automatiquement la requete JPQL correspondante, en se basant sur les noms des champs de l'entite (\texttt{findBy} + nom du champ + operateurs comme \texttt{And}, \texttt{OrderBy}, \texttt{GreaterThan}...). Pour des requetes plus complexes, on peut aussi ecrire soi-meme le JPQL avec \texttt{@Query}.
+\end{reponse}
+
+\begin{question} Expliquez les relations \texttt{@OneToOne}, \texttt{@OneToMany}, \texttt{@ManyToOne} et \texttt{@ManyToMany}.
+\end{question}
+\begin{reponse}
+Elles mappent les relations SQL classiques : \texttt{@ManyToOne} (plusieurs \texttt{Order} pour un \texttt{Customer}, porte la cle etrangere), \texttt{@OneToMany} (le cote inverse, souvent avec \texttt{mappedBy}), \texttt{@OneToOne} (relation 1-1, ex: \texttt{User} et \texttt{UserProfile}), \texttt{@ManyToMany} (necessite une table de jointure, ex: \texttt{Student} et \texttt{Course}). Bien identifier le \emph{proprietaire} de la relation (celui qui porte la cle etrangere ou la table de jointure) est essentiel pour eviter des ecritures dupliquees ou incoherentes.
+\end{reponse}
+
+\begin{question} Quelle est la difference entre \texttt{FetchType.LAZY} et \texttt{FetchType.EAGER} ? Pourquoi privilegier le Lazy Loading ?
+\end{question}
+\begin{reponse}
+\texttt{EAGER} charge la relation immediatement avec l'entite parente (requete JOIN ou requete supplementaire systematique). \texttt{LAZY} ne charge la relation que lorsqu'elle est effectivement accedee dans le code (via un proxy). On privilegie \texttt{LAZY} par defaut (c'est d'ailleurs le defaut JPA pour \texttt{@OneToMany}/\texttt{@ManyToMany}) pour eviter de charger inutilement de grosses portions du graphe d'objets et degrader les performances -- quitte a charger explicitement ce dont on a besoin via \texttt{JOIN FETCH} ou \texttt{@EntityGraph} quand on sait qu'on va l'utiliser.
+\end{reponse}
+
+\begin{question} Qu'est-ce que le probleme du "N+1 Select" et comment l'eviter ?
+\end{question}
+\begin{reponse}
+C'est un piege classique : Hibernate execute 1 requete pour charger la liste des entites parentes, puis, a cause du Lazy Loading, declenche N requetes supplementaires (une par entite parente) pour charger chacune de leurs collections enfants au moment ou elles sont parcourues -- au lieu d'une seule requete avec jointure. On l'evite en utilisant une jointure explicite en JPQL (\texttt{JOIN FETCH}) ou en declarant un \texttt{@EntityGraph} sur la methode du repository pour forcer le chargement en une seule requete.
+\end{reponse}
+
+\begin{lstlisting}
+// Provoque potentiellement du N+1 si order.getItems() est LAZY
+List<Order> orders = orderRepository.findAll();
+orders.forEach(o -> o.getItems().size()); // 1 requete par order !
+
+// Solution : jointure explicite en une seule requete
+@Query("SELECT o FROM Order o JOIN FETCH o.items")
+List<Order> findAllWithItems();
+\end{lstlisting}
+
+\begin{question} A quoi sert \texttt{CascadeType.ALL} et quels sont les risques a l'utiliser sans reflechir ?
+\end{question}
+\begin{reponse}
+Le cascade propage automatiquement une operation (persist, merge, remove...) de l'entite parente vers ses entites liees. \texttt{CascadeType.ALL} applique toutes les operations, y compris \texttt{REMOVE} : supprimer un parent supprime alors en cascade tous ses enfants. C'est pratique pour une relation de composition forte (ex: \texttt{Order} et ses \texttt{OrderLine}, qui n'ont pas de sens sans le parent), mais dangereux sur une relation partagee (ex: supprimer un \texttt{Author} ne devrait pas supprimer les \texttt{Book} s'ils peuvent avoir plusieurs auteurs).
+\end{reponse}
+
+\begin{question} Comment gerez-vous les transactions dans Spring Boot avec \texttt{@Transactional} ?
+\end{question}
+\begin{reponse}
+On annote une methode de service (jamais le repository, ni idealement le controleur) avec \texttt{@Transactional} : Spring ouvre une transaction avant l'execution et la commit a la fin, ou la rollback automatiquement si une \texttt{RuntimeException} (unchecked) non geree est levee -- pas par defaut pour une checked exception, sauf a le preciser avec \texttt{rollbackFor}. On peut aussi configurer la \textbf{propagation} (ex: \texttt{REQUIRED} rejoint une transaction existante ou en cree une, \texttt{REQUIRES\_NEW} en suspend une existante pour en ouvrir une independante) et l'\textbf{isolation} (niveau de visibilite des modifications concurrentes).
+\end{reponse}
+
+\begin{piege}
+\texttt{@Transactional} ne fonctionne que si la methode est appelee \emph{depuis l'exterieur du bean} (Spring l'implemente via un proxy). Un appel interne (\texttt{this.autreMethode()}) depuis la meme classe contourne le proxy et ignore silencieusement l'annotation -- un piege tres frequemment cite en entretien.
+\end{piege}
+
+\newpage
+% =====================================================================
+\section{SQL}
+% =====================================================================
+
+\begin{question} Quelle est la difference entre \texttt{INNER JOIN}, \texttt{LEFT JOIN} et \texttt{RIGHT JOIN} ?
+\end{question}
+\begin{reponse}
+\texttt{INNER JOIN} ne retourne que les lignes ayant une correspondance dans les deux tables. \texttt{LEFT JOIN} retourne toutes les lignes de la table de gauche, avec \texttt{NULL} pour les colonnes de droite si aucune correspondance n'existe. \texttt{RIGHT JOIN} fait l'inverse (toutes les lignes de la table de droite).
+\end{reponse}
+
+\begin{question} Quelle est la difference entre \texttt{WHERE} et \texttt{HAVING} ?
+\end{question}
+\begin{reponse}
+\texttt{WHERE} filtre les lignes \emph{avant} l'agregation (\texttt{GROUP BY}) et ne peut pas utiliser une fonction d'agregation. \texttt{HAVING} filtre les groupes \emph{apres} l'agregation et peut utiliser des fonctions comme \texttt{COUNT()}, \texttt{SUM()}, \texttt{AVG()}.
+\end{reponse}
+
+\begin{question} A quoi sert un \texttt{INDEX} et quel est son cout ?
+\end{question}
+\begin{reponse}
+Un index (souvent un arbre B-tree) permet a la base de retrouver des lignes sans parcourir toute la table (\emph{full scan}), accelerant drastiquement les \texttt{SELECT} filtres ou tries sur la colonne indexee. Le cout : chaque \texttt{INSERT}/\texttt{UPDATE}/\texttt{DELETE} doit aussi mettre a jour l'index, ce qui ralentit les ecritures et consomme de l'espace disque supplementaire -- il faut donc indexer les colonnes lues frequemment (cles etrangeres, colonnes de \texttt{WHERE}/\texttt{JOIN}), pas tout.
+\end{reponse}
+
+\begin{question} Quelle est la difference entre \texttt{PRIMARY KEY}, \texttt{FOREIGN KEY} et \texttt{UNIQUE} ?
+\end{question}
+\begin{reponse}
+\texttt{PRIMARY KEY} identifie de facon unique chaque ligne d'une table (non nulle, unique, une seule par table, souvent indexee automatiquement). \texttt{FOREIGN KEY} garantit l'integrite referentielle en imposant qu'une colonne corresponde a une cle primaire d'une autre table. \texttt{UNIQUE} garantit simplement l'absence de doublons sur une colonne (ou combinaison de colonnes), sans en faire l'identifiant de la table -- et peut accepter \texttt{NULL} contrairement a \texttt{PRIMARY KEY}.
+\end{reponse}
+
+\begin{coding}[Exercice SQL -- a ecrire soi-meme]
+On vous donne une table \texttt{employees(id, name, department, hire\_date, salary)}. Ecrivez les 3 requetes suivantes : (1) les 5 derniers employes embauches, (2) le nombre d'employes par departement, (3) le nom des employes et le nom de leur departement via une jointure avec une table \texttt{departments(id, name)}.
+
+\emph{Reflechissez a la clause de tri necessaire pour le (1), a \texttt{GROUP BY} pour le (2), et au type de jointure le plus adapte pour le (3) avant de regarder une solution.}
+\end{coding}
+
+\newpage
+% =====================================================================
+\section{Spring Security et JWT}
+% =====================================================================
+
+\begin{question} Quelle est la difference entre authentification et autorisation ?
+\end{question}
+\begin{reponse}
+L'\textbf{authentification} repond a "qui es-tu ?" (verifier l'identite, ex: login/mot de passe, token). L'\textbf{autorisation} repond a "as-tu le droit de faire ceci ?" (verifier les permissions/roles une fois l'identite etablie, ex: \texttt{@PreAuthorize("hasRole('ADMIN')")}).
+\end{reponse}
+
+\begin{question} Pourquoi utiliser JWT plutot que des sessions serveur classiques ?
+\end{question}
+\begin{reponse}
+Un JWT (JSON Web Token) est auto-porteur (\emph{stateless}) : toutes les informations necessaires a l'authentification/autorisation sont encodees et signees dans le token lui-meme, donc le serveur n'a pas besoin de stocker un etat de session. Cela facilite le passage a l'echelle horizontale (pas de partage de session entre instances) et s'integre naturellement dans les architectures microservices ou une API REST est par nature stateless.
+\end{reponse}
+
+\begin{question} Quelle est la structure d'un JWT ?
+\end{question}
+\begin{reponse}
+Un JWT est compose de 3 parties encodees en Base64Url et separees par des points : \textbf{Header} (algorithme de signature utilise, ex: HS256), \textbf{Payload} (les \emph{claims} : donnees comme l'identifiant utilisateur, les roles, la date d'expiration -- non chiffrees, seulement encodees, donc jamais y mettre de secret), et \textbf{Signature} (calculee a partir du header, du payload et d'une cle secrete/privee, permettant de verifier que le token n'a pas ete altere).
+\end{reponse}
+
+\begin{piege}
+Le payload d'un JWT n'est pas chiffre, seulement encode en Base64 -- n'importe qui peut le decoder et lire son contenu (mais pas le modifier sans invalider la signature). Ne jamais y stocker d'information sensible (mot de passe, numero de carte bancaire).
+\end{piege}
+
+\newpage
+% =====================================================================
+\section{Tests (JUnit, Mockito)}
+% =====================================================================
+
+\begin{question} Comment testez-vous une application Spring Boot a differents niveaux ?
+\end{question}
+\begin{reponse}
+\textbf{Tests unitaires} avec JUnit 5 et Mockito : on teste une classe de service isolee, en mockant ses dependances, sans demarrer de contexte Spring (rapide). \textbf{Tests d'integration} avec \texttt{@SpringBootTest} : on demarre tout ou partie du contexte Spring reel pour verifier que les composants s'assemblent correctement. \textbf{Tests de la couche web} avec \texttt{@WebMvcTest} : on ne charge que la couche MVC (controleurs, filtres, validation), en mockant la couche service, pour tester le mapping des routes/codes HTTP sans la lenteur d'un contexte complet.
+\end{reponse}
+
+\begin{question} A quoi servent \texttt{@Mock} et \texttt{@InjectMocks} avec Mockito ?
+\end{question}
+\begin{reponse}
+\texttt{@Mock} cree un faux objet dont on controle le comportement (\texttt{when(...).thenReturn(...)}) pour simuler une dependance sans son implementation reelle. \texttt{@InjectMocks} cree une instance reelle de la classe testee et y injecte automatiquement les champs annotes \texttt{@Mock} correspondants -- typiquement via l'injection par constructeur si elle existe.
+\end{reponse}
+
+\begin{lstlisting}
+@ExtendWith(MockitoExtension.class)
+class OrderServiceTest {
+
+    @Mock
+    private PaymentClient paymentClient;
+
+    @InjectMocks
+    private OrderService orderService;
+
+    @Test
+    void shouldRejectOrderWhenPaymentFails() {
+        when(paymentClient.charge(any())).thenReturn(false);
+
+        assertThrows(PaymentFailedException.class,
+                () -> orderService.placeOrder(new Order()));
+    }
+}
+\end{lstlisting}
+
+\begin{question} A quoi sert \texttt{@MockBean} et en quoi differe-t-il de \texttt{@Mock} ?
+\end{question}
+\begin{reponse}
+\texttt{@MockBean} est propre a l'ecosysteme de test Spring : il remplace un vrai bean par un mock \emph{dans le contexte d'application Spring} lui-meme (utile avec \texttt{@SpringBootTest} ou \texttt{@WebMvcTest} pour isoler la couche testee des couches sous-jacentes, ex: mocker le \texttt{Service} pour tester uniquement le \texttt{Controller}). \texttt{@Mock} (pur Mockito) cree un mock independant de tout contexte Spring, utilise dans des tests unitaires purs sans \texttt{ApplicationContext}.
+\end{reponse}
+
+\newpage
+% =====================================================================
+\section{Maven, Git, Docker}
+% =====================================================================
+
+\subsection{Maven}
+
+\begin{question} A quoi sert le fichier \texttt{pom.xml} ?
+\end{question}
+\begin{reponse}
+C'est le descripteur de projet Maven : il declare les coordonnees du projet (groupId/artifactId/version), ses dependances, ses plugins de build, et heritages/parents (comme \texttt{spring-boot-starter-parent} qui fixe des versions coherentes de dependances).
+\end{reponse}
+
+\begin{question} Quelle est la difference entre les scopes Maven \texttt{compile}, \texttt{test} et \texttt{runtime} ?
+\end{question}
+\begin{reponse}
+\texttt{compile} (par defaut) : la dependance est disponible a la compilation et a l'execution, et se propage aux projets dependants. \texttt{test} : disponible uniquement pour compiler/executer les tests (ex: JUnit), absente du jar final. \texttt{runtime} : pas necessaire pour compiler le code mais requise a l'execution (ex: un driver JDBC).
+\end{reponse}
+
+\subsection{Git}
+
+\begin{question} Quelle est la difference entre \texttt{git fetch} et \texttt{git pull} ?
+\end{question}
+\begin{reponse}
+\texttt{git fetch} recupere les commits distants et met a jour les branches de suivi (\texttt{origin/main}) sans toucher a la branche locale courante. \texttt{git pull} fait un \texttt{fetch} suivi automatiquement d'un \texttt{merge} (ou \texttt{rebase} selon la config) pour integrer ces changements dans la branche locale.
+\end{reponse}
+
+\begin{question} Quelle est la difference entre \texttt{git merge} et \texttt{git rebase} ?
+\end{question}
+\begin{reponse}
+\texttt{merge} cree un nouveau commit de fusion qui combine deux historiques, en preservant fidelement l'historique reel (y compris les branches paralleles). \texttt{rebase} rejoue les commits d'une branche par-dessus une autre, produisant un historique lineaire mais reecrivant les hash de commits -- a eviter sur une branche deja partagee/poussee sans coordination.
+\end{reponse}
+
+\begin{question} A quoi servent \texttt{git stash} et \texttt{git reset} ?
+\end{question}
+\begin{reponse}
+\texttt{git stash} met de cote temporairement les modifications non commitees (pour changer de branche sans les perdre ni les commiter), qu'on peut restaurer plus tard avec \texttt{git stash pop}. \texttt{git reset} deplace le pointeur de branche vers un commit anterieur, avec 3 modes : \texttt{--soft} (garde les changements indexes), \texttt{--mixed} (par defaut, garde les changements mais desindexes), \texttt{--hard} (supprime purement et simplement les changements -- destructif).
+\end{reponse}
+
+\subsection{Docker}
+
+\begin{question} Pourquoi utiliser Docker pour une application Spring Boot ?
+\end{question}
+\begin{reponse}
+Docker encapsule l'application avec toutes ses dependances systeme (JVM, librairies natives) dans une \emph{image} reproductible, garantissant que "ca marche sur ma machine" se traduise par "ca marche partout" (dev, CI, prod). Cela simplifie aussi le deploiement et l'orchestration (Kubernetes, Docker Compose) en traitant chaque service comme une unite isolee et interchangeable.
+\end{reponse}
+
+\begin{question} Quelle est la difference entre une image et un conteneur Docker ?
+\end{question}
+\begin{reponse}
+Une \textbf{image} est un template en lecture seule (le "plan de construction", construit a partir d'un \texttt{Dockerfile}) contenant le systeme de fichiers et la configuration necessaires pour lancer une application. Un \textbf{conteneur} est une instance en cours d'execution de cette image, avec sa propre couche d'ecriture ephemere -- on peut lancer plusieurs conteneurs a partir de la meme image.
+\end{reponse}
+
+\begin{question} A quoi sert un volume Docker ?
+\end{question}
+\begin{reponse}
+Par defaut, les donnees ecrites dans un conteneur disparaissent quand il est supprime. Un \textbf{volume} est un espace de stockage gere par Docker, monte dans le conteneur, qui persiste independamment du cycle de vie du conteneur -- indispensable pour les donnees d'une base de donnees conteneurisee par exemple.
+\end{reponse}
+
+\newpage
+% =====================================================================
+\section{Design Patterns}
+% =====================================================================
+
+\begin{question} Expliquez le pattern Singleton et son lien avec Spring.
+\end{question}
+\begin{reponse}
+Le Singleton garantit qu'une classe n'a qu'une seule instance, accessible globalement. Spring implemente ce pattern nativement pour le scope par defaut de ses beans : au lieu de coder soi-meme un singleton "a la main" (constructeur prive + instance statique, souvent source de bugs en environnement multi-thread ou en test), on delegue cette responsabilite au conteneur, qui garantit une seule instance par contexte applicatif tout en restant facilement testable (on peut recreer un contexte propre par test).
+\end{reponse}
+
+\begin{question} Expliquez le pattern Factory et ou il apparait dans Spring.
+\end{question}
+\begin{reponse}
+Une Factory centralise la logique de creation d'objets, evitant d'exposer directement leurs constructeurs et permettant de choisir dynamiquement quelle implementation instancier. Spring l'utilise abondamment : l'\texttt{ApplicationContext} est lui-meme une \emph{BeanFactory} ; les methodes \texttt{@Bean} sont des methodes-fabriques.
+\end{reponse}
+
+\begin{question} Expliquez le pattern Builder et donnez un exemple d'usage courant en Java.
+\end{question}
+\begin{reponse}
+Le Builder construit un objet complexe etape par etape via des appels chaines, evitant les constructeurs a rallonge (\emph{telescoping constructor}) et rendant la construction lisible et flexible sur les champs optionnels. Exemple courant : \texttt{ResponseEntity.status(201).header(...).body(...)} en Spring, ou l'utilisation de Lombok \texttt{@Builder} sur un DTO.
+\end{reponse}
+
+\begin{question} Expliquez le pattern Strategy et son lien avec l'injection de dependances.
+\end{question}
+\begin{reponse}
+Le Strategy definit une famille d'algorithmes interchangeables derriere une meme interface, le choix de l'implementation concrete etant fait a l'exterieur de la classe qui l'utilise. C'est exactement ce que permet l'injection de dependances Spring : une classe declare une dependance sur une \emph{interface} (ex: \texttt{PaymentStrategy}), et le conteneur lui injecte l'implementation concrete (\texttt{CreditCardPayment}, \texttt{PaypalPayment}) sans que la classe cliente n'ait a connaitre les details.
+\end{reponse}
+
+\begin{question} Expliquez le pattern Observer et son lien avec Spring.
+\end{question}
+\begin{reponse}
+L'Observer permet a un objet ("sujet") de notifier automatiquement une liste d'"observateurs" abonnes lorsqu'un evenement se produit, sans couplage direct entre eux. Spring l'implemente via son systeme d'evenements applicatifs : \texttt{ApplicationEventPublisher.publishEvent(...)} pour emettre, et \texttt{@EventListener} pour reagir -- utile pour decoupler des actions secondaires (ex: envoyer un email apres une commande) de la logique metier principale.
+\end{reponse}
+
+\newpage
+% =====================================================================
+\section{Questions sur votre projet}
+% =====================================================================
+
+\begin{cle}[Pourquoi c'est 40\% de l'entretien]
+Les recruteurs veulent verifier que vous \emph{comprenez} vos choix techniques, pas juste que vous savez les nommer. Preparez pour chaque techno de votre stack une reponse en 3 temps : (1) le probleme que ca resout, (2) pourquoi cette techno plutot qu'une alternative evidente, (3) une limite ou un compromis que vous avez accepte.
+\end{cle}
+
+\begin{question} Pourquoi avoir choisi Spring Boot pour ce projet ?
+\end{question}
+\begin{reponse}
+\emph{Exemple de trame de reponse} : besoin de mettre en place rapidement une API REST robuste avec un ecosysteme mature (securite, acces aux donnees, tests) sans reinventer la configuration de base -- l'auto-configuration et les starters ont permis de se concentrer sur la logique metier des le depart plutot que sur la plomberie.
+\end{reponse}
+
+\qr{Pourquoi PostgreSQL plutot qu'une autre base ?}{Base relationnelle mature, transactions ACID fiables, bon support JSONB si besoin de flexibilite ponctuelle, ecosysteme d'outils riche (extensions, monitoring) -- a adapter avec les vraies raisons de votre projet.}
+
+\qr{Pourquoi Kafka dans votre architecture ?}{Decoupler des services pour absorber des pics de charge et permettre un traitement asynchrone/rejouable des evenements, plutot qu'un appel HTTP synchrone fragile entre services.}
+
+\qr{Pourquoi Docker pour ce projet ?}{Garantir un environnement reproductible entre les machines de l'equipe, faciliter l'integration continue, et simplifier l'orchestration de plusieurs services (base, cache, application) avec Docker Compose.}
+
+\qr{Pourquoi cette architecture (ex: microservices, en couches) ?}{A justifier par un besoin concret (scalabilite independante des composants, isolation des pannes, ou au contraire simplicite pour un petit projet) -- eviter de justifier un choix architectural uniquement par "c'est la mode".}
+
+\begin{question} Comment avez-vous securise votre API ?
+\end{question}
+\begin{reponse}
+\emph{Points a couvrir} : authentification (JWT ou session), autorisation par roles (\texttt{@PreAuthorize}), validation systematique des entrees (\texttt{@Valid}), configuration CORS explicite, gestion des secrets hors du code source (variables d'environnement), et eventuellement rate limiting sur les endpoints sensibles.
+\end{reponse}
+
+\qr{Comment gerez-vous les exceptions dans votre projet ?}{Un \texttt{@RestControllerAdvice} centralise qui traduit chaque type d'exception metier en code HTTP et message standardises, evitant la duplication de blocs try/catch dans chaque controleur.}
+
+\qr{Comment ameliorer les performances de votre application ?}{Identifier d'abord le goulot d'etranglement reel (profiling, Actuator metrics) avant d'optimiser : pistes courantes = corriger les N+1 queries, ajouter des index cibles, mettre en cache les lectures frequentes (ex: Spring Cache + Redis), paginer les listes volumineuses.}
+
+\qr{Que changeriez-vous aujourd'hui dans ce projet ?}{Reponse honnete et specifique valorisee par les recruteurs : mieux vaut citer une vraie limite technique assumee (ex: "je testerais plus la couche d'integration" ou "je decouplerais davantage X de Y") qu'une reponse vague du type "rien".}
+
+\qr{Quel est le plus gros bug que vous avez rencontre et comment l'avez-vous resolu ?}{Structurez la reponse en methode : symptome observe, hypotheses testees, cause racine identifiee, correction, et ce que vous en avez tire pour eviter la recidive (test ajoute, monitoring, revue de code).}
+
+\newpage
+% =====================================================================
+\section{Pieges classiques et questions de reflexion}
+% =====================================================================
+
+\begin{question} Pourquoi Spring est-il base sur l'IoC plutot que de laisser le code creer ses propres dependances ?
+\end{question}
+\begin{reponse}
+Sans IoC, chaque classe est fortement couplee aux implementations concretes de ses dependances (via \texttt{new}), ce qui rend le code difficile a tester (impossible de substituer un mock) et a faire evoluer (changer une implementation implique de modifier tous les appelants). L'IoC inverse cette dependance : le code depend d'abstractions, et un composant externe (le conteneur) cable les implementations concretes -- c'est le principe d'inversion des dependances (le "D" de SOLID) applique a grande echelle.
+\end{reponse}
+
+\qr{Pourquoi programmer contre des interfaces plutot que des implementations concretes ?}{Cela permet de changer d'implementation sans toucher au code appelant, et de substituer facilement un mock en test -- c'est la base du principe de substitution de Liskov et de l'injection de dependances.}
+
+\qr{Pourquoi REST plutot que SOAP ?}{REST s'appuie sur les verbes et codes HTTP standards, est plus leger (souvent JSON vs XML enveloppe SOAP), plus simple a consommer et a faire evoluer, et s'integre naturellement au cache HTTP -- SOAP reste pertinent pour des contrats stricts (WSDL) et des besoins avances (transactions distribuees, WS-Security).}
+
+\qr{Pourquoi dit-on que HTTP est stateless et quel impact sur la conception d'une API ?}{Chaque requete HTTP est independante et ne s'appuie sur aucun contexte serveur laisse par une requete precedente -- cela pousse a authentifier chaque requete individuellement (ex: token JWT dans le header) plutot que de compter sur une session serveur, ce qui facilite la scalabilite horizontale.}
+
+\qr{Pourquoi le pattern Singleton est-il a la fois utile et potentiellement dangereux ?}{Utile pour partager un etat/service couteux a instancier ; dangereux si l'etat qu'il contient est mutable et partage entre threads sans synchronisation, ou si son usage rend le code difficile a tester (dependance globale cachee) -- Spring att\'enue ce risque en gerant le cycle de vie et en facilitant l'injection de mocks en test.}
+
+\qr{Pourquoi @Transactional peut echouer silencieusement lors d'un appel interne ?}{Spring implemente les annotations comme @Transactional via un proxy genere autour du bean. Un appel via this. depuis l'interieur de la meme classe contourne ce proxy et execute directement la methode originale, sans jamais passer par la logique transactionnelle -- d'ou l'importance d'extraire la methode annotee dans un autre bean si necessaire.}
+
+\newpage
+% =====================================================================
+\section{Exercices de code en direct}
+% =====================================================================
+
+\begin{cle}[Methode conseillee en live coding]
+Avant d'ecrire la moindre ligne : reformulez le besoin a voix haute, identifiez les entites/DTOs necessaires, puis annoncez votre plan (endpoint -> service -> repository) avant de coder. Cela montre une demarche structuree meme si le code final n'est pas parfait.
+\end{cle}
+
+\begin{coding}[CRUD complet pour une entite \texttt{Product}]
+Implementez un CRUD REST complet pour une entite \texttt{Product} (id, name, price, stock) : entite JPA, repository Spring Data, service, controleur avec les 5 operations standard (create, findById, findAll, update, delete) et les codes HTTP appropries pour chacune.
+
+\emph{Points d'attention attendus par l'evaluateur : gestion du cas "produit non trouve" (404), utilisation de DTOs plutot que d'exposer l'entite JPA directement, et validation des champs a la creation.}
+\end{coding}
+
+\begin{coding}[Endpoint de connexion avec JWT]
+Implementez un endpoint \texttt{POST /auth/login} qui recoit un couple email/mot de passe, verifie les identifiants, puis retourne un JWT signe contenant l'identifiant utilisateur et son role, avec une date d'expiration.
+
+\emph{Reflechissez a : ou stocker la cle de signature (jamais en dur dans le code source), comment hacher le mot de passe stocke (BCrypt), et quel code HTTP renvoyer si les identifiants sont invalides.}
+\end{coding}
+
+\begin{coding}[Pagination et recherche]
+Ajoutez a un endpoint \texttt{GET /products} la possibilite de paginer les resultats (\texttt{page}, \texttt{size}) et de filtrer par mot-cle sur le nom du produit, en utilisant \texttt{Pageable} et \texttt{JpaRepository}.
+
+\emph{Reflechissez a la methode de repository a ecrire (nom de methode derive vs \texttt{@Query}) et a la structure de la reponse JSON paginee (contenu + metadonnees de pagination).}
+\end{coding}
+
+\end{document}

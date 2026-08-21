@@ -1,0 +1,687 @@
+% =====================================================================
+%  Guide de preparation -- Entretien System Design
+%  Profil : Data Engineering, Streaming, IA generative, systemes distribues
+%  30 sujets prioritaires + framework d'entretien + trade-offs cles
+%  Compilation : pdflatex entretien_system_design.tex  (x2 pour le sommaire)
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+
+% ---- Encodage & langue -------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+
+% ---- Mise en page ------------------------------------------------------
+\usepackage[a4paper,margin=2.2cm]{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\tcbuselibrary{skins,breakable}
+
+% ---- Couleurs (palette System Design : violet architecture / gris ardoise)
+\definecolor{archviolet}{RGB}{94,53,177}
+\definecolor{archdark}{RGB}{49,27,98}
+\definecolor{darkgray}{RGB}{51,51,51}
+\definecolor{lightgray}{RGB}{245,245,245}
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{kwcolor}{RGB}{0,102,153}
+\definecolor{strcolor}{RGB}{163,21,21}
+\definecolor{comcolor}{RGB}{0,128,0}
+\definecolor{piegebg}{RGB}{255,244,229}
+\definecolor{piegeframe}{RGB}{230,126,34}
+\definecolor{clebg}{RGB}{237,231,246}
+\definecolor{cleframe}{RGB}{94,53,177}
+\definecolor{reqbg}{RGB}{224,236,247}
+\definecolor{reqframe}{RGB}{25,103,210}
+\definecolor{archbg}{RGB}{232,245,233}
+\definecolor{archframe}{RGB}{46,125,50}
+\definecolor{tradebg}{RGB}{255,243,224}
+\definecolor{tradeframe}{RGB}{239,108,0}
+\definecolor{estimbg}{RGB}{240,240,240}
+\definecolor{estimframe}{RGB}{97,97,97}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=archdark,
+  urlcolor=archdark,
+  citecolor=archdark,
+  pdftitle={Guide Entretien System Design},
+  pdfauthor={Fiche de preparation entretien}
+}
+
+% ---- En-tetes / pieds de page -----------------------------------------
+\setlength{\headheight}{24pt}
+\addtolength{\topmargin}{-12pt}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{archdark}{Entretien System Design}}
+\fancyhead[R]{\small\thepage}
+\fancyfoot[C]{\small\textit{Guide de preparation -- Data / Streaming / IA}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{archviolet}\leaders\hrule height \headrulewidth\hfill}}
+
+% ---- Style des titres --------------------------------------------------
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{archdark}}
+  {\thesection.}{0.6em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{archviolet}}
+  {\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\bfseries\color{darkgray}}
+  {\thesubsubsection}{0.6em}{}
+
+% ---- Style du code -----------------------------------------------------
+\lstdefinestyle{plainstyle}{
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{kwcolor}\bfseries,
+  stringstyle=\color{strcolor},
+  commentstyle=\color{comcolor}\itshape,
+  showstringspaces=false, breaklines=true, frame=single,
+  rulecolor=\color{gray!40}, tabsize=2, captionpos=b
+}
+\lstset{style=plainstyle}
+
+% ---- Environnements encadres ------------------------------------------
+\newtcolorbox{req}[1][Exigences]{
+  breakable, colback=reqbg, colframe=reqframe,
+  fonttitle=\bfseries, title={#1},
+  boxrule=1pt, arc=2mm, left=3mm, right=3mm, top=2mm, bottom=2mm
+}
+\newtcolorbox{estim}[1][Estimation (back-of-envelope)]{
+  breakable, colback=estimbg, colframe=estimframe,
+  fonttitle=\bfseries, title={#1},
+  boxrule=1pt, arc=2mm, left=3mm, right=3mm, top=2mm, bottom=2mm
+}
+\newtcolorbox{archbox}[1][Architecture haut niveau]{
+  breakable, colback=archbg, colframe=archframe,
+  fonttitle=\bfseries, title={#1},
+  boxrule=1pt, arc=2mm, left=3mm, right=3mm, top=2mm, bottom=2mm
+}
+\newtcolorbox{tradeoff}[1][Trade-offs cles]{
+  breakable, colback=tradebg, colframe=tradeframe,
+  fonttitle=\bfseries, title={#1},
+  boxrule=1pt, arc=2mm, left=3mm, right=3mm, top=2mm, bottom=2mm
+}
+\newtcolorbox{piege}[1][]{
+  breakable, colback=piegebg, colframe=piegeframe,
+  fonttitle=\bfseries, title={Piege classique #1},
+  boxrule=1pt, arc=2mm, left=3mm, right=3mm, top=2mm, bottom=2mm
+}
+\newtcolorbox{cle}[1][]{
+  breakable, colback=clebg, colframe=cleframe,
+  fonttitle=\bfseries, title={A retenir #1},
+  boxrule=1pt, arc=2mm, left=3mm, right=3mm, top=2mm, bottom=2mm
+}
+
+% Environnement complet "sujet de system design" : req + estim + arch + tradeoff
+\newenvironment{sujet}[1]{%
+  \subsection{#1}
+}{%
+  \bigskip
+}
+
+\newcommand{\qr}[2]{%
+  \par\noindent\textbf{Q~:} #1\par
+  \noindent\textbf{R~:} #2\par\smallskip
+}
+
+% =====================================================================
+\begin{document}
+
+% ---------------------------------------------------------------- TITRE
+\begin{titlepage}
+  \centering
+  \vspace*{2cm}
+  {\Huge\bfseries\color{archdark} Guide de Preparation\par}
+  \vspace{0.5cm}
+  {\LARGE\bfseries\color{archviolet} Entretien System Design\par}
+  \vspace{0.3cm}
+  {\Large 30 sujets prioritaires -- Profil Data / Streaming / IA\par}
+  \vspace{1.5cm}
+  {\large Framework d'entretien, estimations, architectures et trade-offs\par}
+  \vspace{0.3cm}
+  {\large Kafka -- Spark Streaming -- RAG -- Fraud Detection -- Recommendation\par}
+  {\large Uber Dispatch -- Netflix -- Google Drive -- Data Lake -- Feature Store\par}
+  \vfill
+  {\normalsize\textit{L'objectif n'est pas de memoriser des solutions, mais de maitriser un raisonnement reutilisable : exigences, estimation, architecture, trade-offs.}\par}
+  \vspace{1cm}
+  {\small Fiche de preparation personnelle\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% =====================================================================
+\section{Le framework attendu pendant l'entretien}
+% =====================================================================
+
+\begin{cle}[Le principe numero un]
+La communaute (Reddit, Exponent, Gaurav Sen, ByteByteGo) converge sur un seul message : \textbf{ne memorisez pas des solutions toutes faites}. Un intervieweur reconnait immediatement un candidat qui recite une architecture apprise par coeur face a un qui raisonne. Ce qui est evalue : la maitrise des \emph{compromis} (trade-offs), la capacite a partir des exigences (et non d'une techno favorite), et l'aptitude a expliquer son raisonnement a voix haute.
+\end{cle}
+
+Les entretiens de system design suivent quasi-systematiquement cette structure en 12 etapes. Utilisez-la comme checklist mentale pour chaque sujet, y compris pendant votre revision.
+
+\begin{enumerate}[leftmargin=1.3cm, itemsep=2pt]
+  \item \textbf{Clarifier les besoins} -- poser des questions avant de concevoir quoi que ce soit (perimetre, echelle, contraintes).
+  \item \textbf{Exigences fonctionnelles} -- que doit \emph{faire} le systeme (les cas d'usage concrets, priorises).
+  \item \textbf{Exigences non fonctionnelles} -- disponibilite, latence, coherence, durabilite, scalabilite.
+  \item \textbf{Estimation du trafic} -- QPS (requetes/seconde), volume de stockage, bande passante (back-of-envelope).
+  \item \textbf{Architecture de haut niveau} -- schema en boites : client, API, services, stockage, cache, files.
+  \item \textbf{Detail des composants} -- zoomer sur 1 ou 2 composants critiques (souvent celui que l'intervieweur relance).
+  \item \textbf{Choix des bases de donnees} -- SQL vs NoSQL, et pourquoi, en fonction du modele d'acces aux donnees.
+  \item \textbf{Strategie de cache} -- quoi cacher, ou (client, CDN, application, base), quelle politique d'eviction.
+  \item \textbf{Files de messages} -- ou et pourquoi decoupler des composants (Kafka, SQS, RabbitMQ).
+  \item \textbf{Scalabilite} -- scaling horizontal vs vertical, partitionnement/sharding, load balancing.
+  \item \textbf{Haute disponibilite} -- replication, failover, redondance multi-zone/multi-region.
+  \item \textbf{Goulots d'etranglement} -- les identifier proactivement et proposer des ameliorations avant qu'on vous les demande.
+\end{enumerate}
+
+\begin{tradeoff}[Regles de raisonnement transversales]
+\textbf{CAP theorem} : en cas de partition reseau, choisir entre Coherence (Consistency) et Disponibilite (Availability) -- jamais les deux simultanement. \textbf{SQL vs NoSQL} : SQL si les relations et transactions ACID sont centrales (paiements, inventaire) ; NoSQL si le volume/vitesse d'ecriture prime et que le modele d'acces est simple et previsible (feed, logs, sessions). \textbf{Cache} : accelere les lectures repetees mais introduit un risque de donnees perimees (staleness) -- toujours preciser la strategie d'invalidation. \textbf{File de messages} : decouple producteur et consommateur, absorbe les pics de charge, mais ajoute de la latence et de la complexite operationnelle (monitoring du lag, gestion des doublons).
+\end{tradeoff}
+
+\begin{piege}
+Le piege le plus frequent est de foncer directement sur l'architecture avant d'avoir clarifie les exigences. Un candidat qui dessine immediatement "Kafka + Spark + Redis" sans avoir demande le volume de trafic ou la tolerance a la latence donne l'impression de suivre un template plutot que de resoudre le probleme pose. Passez toujours au moins 3-5 minutes sur les etapes 1 a 4 avant de dessiner quoi que ce soit.
+\end{piege}
+
+\newpage
+% =====================================================================
+\section{Streaming et Data Engineering}
+% =====================================================================
+
+\begin{sujet}{Design Kafka (plateforme de streaming d'evenements)}
+
+\begin{req}
+\textbf{Fonctionnel} : publier des evenements (producers), les consommer (consumers) avec plusieurs consommateurs independants sur le meme flux, conserver un historique rejouable. \textbf{Non-fonctionnel} : tres haut debit (millions de messages/sec), faible latence, durabilite (pas de perte de donnees), ordre garanti au moins par cle.
+\end{req}
+
+\begin{archbox}
+\textbf{Log distribue immuable} : chaque \emph{topic} est divise en \emph{partitions}, chacune etant un log ordonne et append-only replique sur plusieurs \emph{brokers} (facteur de replication typique = 3). Un \emph{leader} par partition gere les ecritures, les \emph{followers} repliquent en continu. Les producers ecrivent via une cle de partitionnement (hash de la cle $\to$ partition). Les consumers, organises en \emph{consumer groups}, se repartissent les partitions et memorisent leur \emph{offset} de lecture pour permettre une reprise fiable.
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{Pourquoi plusieurs partitions ?} Parallelisme horizontal en ecriture et en lecture -- sans elles, un topic serait limite au debit d'un seul broker. \textbf{Comment eviter la perte de messages ?} \texttt{acks=all} cote producer (attendre l'accuse de reception de toutes les replicas in-sync avant de considerer l'ecriture reussie) + facteur de replication $\geq 3$ + \texttt{min.insync.replicas} configure. \textbf{Exactly-once ?} Producer idempotent (evite les doublons dus aux retries) combine a des transactions Kafka (\texttt{isolation.level=read\_committed}), ou idempotence applicative cote consumer. \textbf{Ordre des messages ?} Garanti uniquement \emph{au sein} d'une partition -- router les evenements d'une meme entite vers la meme partition via sa cle. \textbf{Replication ?} Facteur $N$ (souvent 3) reparti sur des racks/AZ differents pour survivre a une panne de broker ou de zone. \textbf{Dimensionnement ?} Nombre de partitions dimensionne pour le parallelisme cible (nb consumers max utile = nb partitions), retention basee sur l'espace disque disponible et le besoin de rejouabilite.
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design Spark Streaming Pipeline}
+
+\begin{req}
+\textbf{Fonctionnel} : ingerer un flux continu d'evenements, appliquer des transformations/agregations en quasi temps-reel, ecrire le resultat vers un sink (data lake, base, dashboard). \textbf{Non-fonctionnel} : faible latence (secondes), tolerance aux pannes avec reprise sans perte ni doublon, passage a l'echelle avec le volume d'entree.
+\end{req}
+
+\begin{archbox}
+Source (Kafka) $\to$ \textbf{Structured Streaming} (micro-batchs ou mode continu) $\to$ transformations (agregations par fenetre, jointures stream-stream ou stream-table) $\to$ \textbf{sink} (Delta Lake, base de series temporelles, dashboard). Le moteur decoupe le flux en micro-batchs traites successivement, chacun \emph{checkpointe} (offsets + etat intermediaire) sur un stockage durable pour permettre une reprise exacte apres panne.
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{Batch vs Streaming ?} Streaming si la fraicheur des resultats en quasi temps-reel a une valeur metier directe (fraude, monitoring) ; batch sinon (moins couteux, plus simple a deboguer, suffisant pour du reporting quotidien). \textbf{Spark vs Flink ?} Spark Structured Streaming s'integre naturellement si l'ecosysteme batch existant est deja Spark (code unifie batch/streaming, ecosysteme Delta Lake) ; Flink est concu nativement pour le streaming avec une latence plus faible et un modele d'etat plus riche -- pertinent si la latence sub-seconde est critique. \textbf{Watermark ?} Definit jusqu'a quel point on tolere des evenements en retard avant de fermer definitivement une fenetre temporelle -- compromis explicite entre completude des resultats et latence de mise a disposition. \textbf{Window ?} Fenetres tumbling (sans chevauchement), sliding (chevauchantes) ou session (basees sur l'inactivite) selon le besoin d'agregation. \textbf{Checkpoint ?} Sauvegarde periodique de l'etat et des offsets pour permettre une reprise exacte apres panne, sans recalculer depuis le debut ni perdre l'etat accumule. \textbf{Backpressure ?} Mecanisme qui ralentit l'ingestion quand le traitement ne suit pas le debit d'entree, evitant une accumulation incontrolee en memoire. \textbf{State management ?} L'etat des agregations en cours (ex: compteur par fenetre) est maintenu dans un \emph{state store} (souvent RocksDB local + checkpoint distant) pour survivre aux redemarrages de tache.
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design Real-Time Analytics Platform}
+
+\begin{req}
+\textbf{Fonctionnel} : ingerer des evenements en continu (clics, transactions), calculer des metriques agregees en temps quasi-reel, exposer ces metriques via des dashboards avec rafraichissement automatique. \textbf{Non-fonctionnel} : latence bout-en-bout de quelques secondes, haute disponibilite du pipeline d'ingestion, capacite a absorber des pics de trafic (ex: soldes, evenement viral).
+\end{req}
+
+\begin{estim}
+Exemple de raisonnement (a adapter aux chiffres donnes par l'intervieweur) : 100M evenements/jour $\approx$ 1\,150 evenements/sec en moyenne, avec des pics a 5--10x en heure de pointe $\Rightarrow$ dimensionner l'ingestion pour \textasciitilde10\,000 evenements/sec. Un evenement de \textasciitilde1\,Ko $\Rightarrow$ \textasciitilde100\,Go/jour de donnees brutes a stocker/retenir.
+\end{estim}
+
+\begin{archbox}
+Sources $\to$ \textbf{Kafka} (ingestion, buffer) $\to$ \textbf{Spark/Flink Streaming} (agregations par fenetre glissante) $\to$ double ecriture : (a) \textbf{base serie-temporelle / OLAP} (ex: Druid, ClickHouse, Pinot) pour les requetes de dashboard a faible latence, (b) \textbf{data lake} (Delta/Iceberg) pour l'historique complet et le retraitement. Un service API sert les dashboards en lisant l'OLAP store, jamais directement le flux brut.
+\end{archbox}
+
+\begin{tradeoff}
+Le choix cle est la base servant les dashboards : une base OLAP specialisee (Druid, ClickHouse) plutot qu'un entrepot batch classique, car elle est concue pour l'ingestion continue combinee a des requetes d'agregation sub-seconde. Compromis assume : moins flexible pour des requetes ad hoc complexes qu'un entrepot SQL general, mais bien plus rapide pour le pattern "dashboard temps-reel" qui domine le cas d'usage.
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design CDC Pipeline (Change Data Capture)}
+
+\begin{req}
+\textbf{Fonctionnel} : capturer chaque insertion/modification/suppression dans une base operationnelle (ex: PostgreSQL) et la propager vers des systemes downstream (data lake, cache, moteur de recherche) sans impacter les performances de la base source. \textbf{Non-fonctionnel} : faible latence de propagation, aucune perte d'evenement, ordre preserve par entite.
+\end{req}
+
+\begin{archbox}
+\textbf{Base source} (avec write-ahead log / binlog activé) $\to$ \textbf{connecteur CDC} (ex: Debezium) qui lit le log de transactions directement (pas de polling par requetes SQL couteuses) $\to$ \textbf{Kafka} (un topic par table, evenements insert/update/delete) $\to$ consommateurs multiples en aval (indexation search, invalidation de cache, synchronisation vers le data lake).
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{Pourquoi CDC plutot qu'un polling periodique ?} Le polling (ex: \texttt{SELECT * WHERE updated\_at > last\_run}) rate les suppressions, cree une charge repetee sur la base, et introduit une latence liee a la frequence de polling. Le CDC base sur le log de transactions capture \emph{tous} les changements (y compris deletes) en quasi temps-reel, avec un impact minimal sur la base source puisqu'il lit un log deja ecrit pour la durabilite, pas les tables elles-memes. Compromis : complexite operationnelle superieure (gerer le connecteur, les schema changes) et couplage plus fort au moteur de base de donnees source.
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design Data Lake}
+
+\begin{req}
+\textbf{Fonctionnel} : centraliser des donnees brutes de sources heterogenes (bases, evenements, fichiers), les rendre exploitables par plusieurs equipes (data engineering, analytics, ML) avec des besoins et des outils differents. \textbf{Non-fonctionnel} : cout de stockage maitrise a grande echelle, gouvernance et securite (qui peut acceder a quoi), fiabilite des ecritures concurrentes.
+\end{req}
+
+\begin{archbox}
+Stockage objet (S3/ADLS/GCS) organise en couches \textbf{Bronze} (brut, tel qu'ingere), \textbf{Silver} (nettoye, deduplique, jointures de base), \textbf{Gold} (agrege, modelise pour la consommation metier). Un format de table transactionnel (Delta Lake / Iceberg / Hudi) est pose par-dessus les fichiers Parquet pour apporter des garanties ACID. Un catalogue de metadonnees (ex: Glue Data Catalog, Hive Metastore) rend les donnees decouvrables et interrogeables via SQL par plusieurs moteurs (Spark, Trino, Athena).
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{Pourquoi un data lake plutot qu'un entrepot classique uniquement ?} Le data lake accepte des donnees non structurees/semi-structurees a bas cout de stockage et differe le schema a la lecture (\emph{schema-on-read}), utile quand les besoins d'analyse ne sont pas encore tous connus a l'ingestion -- contrairement a un entrepot qui impose un schema rigide a l'ecriture. Compromis : sans discipline (couches Bronze/Silver/Gold, catalogue, format transactionnel), un data lake degenere facilement en "data swamp" difficile a gouverner et a interroger de maniere fiable.
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design ETL Platform}
+
+\begin{req}
+\textbf{Fonctionnel} : extraire des donnees de sources multiples (APIs, bases, fichiers), les transformer selon des regles metier, les charger dans une destination analytique, de maniere planifiee et fiable. \textbf{Non-fonctionnel} : reprise automatique sur echec, visibilite sur l'etat de chaque pipeline, idempotence (rejouable sans effet de bord), respect de SLA (donnees pretes avant une heure donnee).
+\end{req}
+
+\begin{archbox}
+\textbf{Orchestrateur} (Airflow) declenche des DAGs selon un planning ou un evenement. \textbf{Extraction} : connecteurs vers les sources (API REST, CDC, exports batch). \textbf{Transformation} : privilegier l'\textbf{ELT} -- charger brut dans l'entrepot/lake puis transformer en SQL declaratif avec \textbf{dbt} (versionne, teste, documente) plutot qu'un moteur de transformation externe couteux a maintenir. \textbf{Chargement} : ecriture idempotente (MERGE/UPSERT par cle metier ou overwrite de partition) dans la couche cible.
+\end{archbox}
+
+\begin{tradeoff}
+Le choix ETL vs ELT est le trade-off central : ELT tire parti de la puissance de calcul elastique des entrepots cloud modernes et conserve les donnees brutes pour re-transformer facilement en cas d'evolution des regles metier, au prix d'une consommation de calcul dans l'entrepot lui-meme (facturation a la requete pour BigQuery/Snowflake). ETL garde l'entrepot "propre" mais necessite de maintenir un moteur de transformation separe et de re-extraire pour changer une regle historique.
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design Airflow Scheduler / Orchestrateur de pipelines}
+
+\begin{req}
+\textbf{Fonctionnel} : definir des pipelines comme des graphes de taches avec dependances explicites, les declencher selon un planning (cron) ou un evenement, gerer les reprises sur echec. \textbf{Non-fonctionnel} : scalabilite horizontale de l'execution (des milliers de taches concurrentes), visibilite operationnelle (UI, alerting), tolerance aux pannes du scheduler lui-meme.
+\end{req}
+
+\begin{archbox}
+\textbf{Scheduler} : evalue en continu les DAGs et decide quelles taches sont pretes a s'executer (dependances satisfaites, planning atteint). \textbf{Metastore} (base relationnelle) : etat de toutes les executions passees/en cours. \textbf{Executor} : distribue l'execution reelle des taches (\texttt{CeleryExecutor} via une file de messages + workers, ou \texttt{KubernetesExecutor} qui lance un pod ephemere par tache pour une isolation et un scaling elastique complets). \textbf{Webserver} : UI de supervision.
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{CeleryExecutor vs KubernetesExecutor ?} Celery mutualise un pool de workers pre-demarres (latence de demarrage de tache plus faible, mais ressources reservees meme inactives). Kubernetes lance un pod par tache (isolation totale des dependances/ressources par tache, scaling a zero possible), au prix d'une latence de demarrage de pod a chaque execution. \textbf{Comment le scheduler passe-t-il a l'echelle ?} En le rendant lui-meme actif-actif (plusieurs instances de scheduler evaluant les DAGs en parallele avec verrouillage optimiste sur le metastore) et en deportant l'execution reelle sur l'executor, jamais sur le scheduler.
+\end{tradeoff}
+
+\end{sujet}
+
+\newpage
+% =====================================================================
+\section{IA generative et systemes intelligents}
+% =====================================================================
+
+\begin{sujet}{Design Recommendation Engine}
+
+\begin{req}
+\textbf{Fonctionnel} : suggerer des items (produits, videos, posts) pertinents pour un utilisateur donne, en tenant compte de son historique et du contexte courant. \textbf{Non-fonctionnel} : latence de servir une recommandation en dizaines de millisecondes, fraicheur (integrer les signaux recents), passage a l'echelle sur des catalogues de millions d'items.
+\end{req}
+
+\begin{archbox}
+Architecture en deux etages, standard dans l'industrie : \textbf{Candidate Generation} (retrieval) -- reduire rapidement des millions d'items a quelques centaines de candidats plausibles, souvent via un modele de similarite d'embeddings (recherche vectorielle approximee) ou du filtrage collaboratif precalcule. \textbf{Ranking} -- un modele plus lourd (souvent un reseau de neurones) reordonne precisement ces quelques centaines de candidats en tenant compte de features riches (contexte, recence, profil utilisateur), calculees a la volee via un \textbf{feature store}. Les recommandations candidates sont souvent precalculees en batch/streaming et cachees, le ranking final se faisant en ligne.
+\end{archbox}
+
+\begin{tradeoff}
+Le compromis central est retrieval (rapide, approximatif, sur tout le catalogue) vs ranking (lent, precis, sur un petit sous-ensemble) -- appliquer directement un modele complexe sur des millions d'items en ligne serait bien trop lent. Autre trade-off : filtrage collaboratif (necessite un historique d'interactions, souffre du \emph{cold start} sur les nouveaux items/utilisateurs) vs approche basee sur le contenu (fonctionne des le premier item mais capture moins bien les gouts implicites) -- les systemes de production combinent generalement les deux.
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design Search Engine}
+
+\begin{req}
+\textbf{Fonctionnel} : indexer un grand corpus de documents, repondre a une requete texte libre avec les resultats les plus pertinents, classes par pertinence. \textbf{Non-fonctionnel} : latence de recherche sous 100ms, index mis a jour en continu sans interrompre les recherches, scalabilite horizontale sur des milliards de documents.
+\end{req}
+
+\begin{archbox}
+\textbf{Pipeline d'indexation} : documents $\to$ analyse/tokenisation $\to$ construction d'un \textbf{index inverse} (mot $\to$ liste des documents le contenant, avec position et frequence) $\to$ index distribue et \textbf{sharde} (ex: Elasticsearch/OpenSearch) avec replication pour la disponibilite. \textbf{Pipeline de requete} : la requete est tokenisee de la meme facon, envoyee en parallele a tous les shards pertinents (\emph{scatter-gather}), chaque shard retourne ses meilleurs resultats locaux scores (souvent via BM25), un noeud coordinateur fusionne et retrie le resultat global.
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{Index inverse vs scan lineaire} : l'index inverse rend la recherche sous-lineaire par rapport au nombre de documents (on ne consulte que les documents contenant les termes cherches), indispensable a l'echelle du Web/d'un gros catalogue. \textbf{Sharding} : necessaire quand l'index depasse la capacite d'une seule machine, mais chaque requete devient une operation distribuee scatter-gather -- la latence totale est bornee par le shard le plus lent, ce qui impose une attention particuliere a l'equilibrage de charge entre shards.
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design Vector Database}
+
+\begin{req}
+\textbf{Fonctionnel} : stocker des vecteurs d'embeddings de haute dimension (ex: 768 ou 1536 dimensions), retrouver les $k$ vecteurs les plus proches d'un vecteur requete (recherche de similarite). \textbf{Non-fonctionnel} : latence de recherche faible meme sur des centaines de millions de vecteurs, mises a jour incrementales de l'index sans reconstruction complete.
+\end{req}
+
+\begin{archbox}
+Le coeur du systeme est un \textbf{index de recherche approximative des plus proches voisins (ANN)} -- une recherche exacte (calculer la distance a tous les vecteurs) est bien trop couteuse a grande echelle. Algorithmes courants : \textbf{HNSW} (graphe hierarchique navigable, tres bon compromis vitesse/precision, standard de facto), ou \textbf{IVF} (partitionnement de l'espace vectoriel en clusters, on ne cherche que dans les clusters les plus proches du vecteur requete). Les vecteurs sont sharde s par volume, avec des metadonnees associees permettant un filtrage hybride (ex: "similaire a X ET categorie = Y").
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{ANN vs recherche exacte} : l'ANN sacrifie une garantie de trouver \emph{exactement} les $k$ plus proches voisins contre un gain de plusieurs ordres de grandeur en vitesse -- acceptable car en pratique, un resultat "presque le plus proche" est indiscernable metier d'un resultat exact. \textbf{HNSW vs IVF} : HNSW offre generalement une meilleure precision a latence egale mais consomme plus de memoire (graphe garde en RAM) ; IVF est plus econome en memoire et plus simple a re-entrainer/re-partitionner mais moins precis a rappel egal.
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design RAG System (Retrieval-Augmented Generation)}
+
+\begin{req}
+\textbf{Fonctionnel} : repondre a une question utilisateur en s'appuyant sur un corpus de documents specifique (pas seulement les connaissances parametriques du LLM), avec citation des sources. \textbf{Non-fonctionnel} : latence bout-en-bout acceptable pour un usage conversationnel (quelques secondes), fraicheur du corpus indexe, limiter les hallucinations en ancrant la reponse dans les documents recuperes.
+\end{req}
+
+\begin{archbox}
+\textbf{Pipeline d'ingestion} : documents $\to$ decoupage en chunks (avec chevauchement) $\to$ modele d'embedding $\to$ stockage dans une vector database, avec les metadonnees (source, date). \textbf{Pipeline de requete} : question utilisateur $\to$ embedding de la question $\to$ recherche de similarite (top-$k$ chunks pertinents, eventuellement combinee a une recherche lexicale classique = \emph{hybrid search}) $\to$ les chunks recuperes sont injectes comme contexte dans le prompt envoye au LLM $\to$ generation de la reponse finale, avec citation des chunks sources.
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{Taille des chunks} : des chunks trop grands diluent la pertinence de la recherche vectorielle (un chunk contient plusieurs sujets, son embedding devient un "moyennage" flou) ; des chunks trop petits perdent le contexte necessaire a une reponse coherente -- un compromis empirique typique se situe entre quelques centaines de tokens, avec chevauchement pour ne pas couper une idee en deux. \textbf{Recherche vectorielle seule vs hybride} : la recherche vectorielle capture la similarite semantique mais rate parfois des correspondances exactes (noms propres, codes, acronymes) qu'une recherche lexicale (BM25) trouve facilement -- combiner les deux (hybrid search) ameliore generalement le rappel. \textbf{Reduire les hallucinations} : forcer le prompt a n'utiliser que le contexte fourni ("repondre uniquement a partir des documents ci-dessous, dire si l'information est absente"), et exposer les sources pour permettre une verification humaine.
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design ChatGPT / AI Assistant conversationnel}
+
+\begin{req}
+\textbf{Fonctionnel} : conversation multi-tour avec memoire du contexte de la session, generation de reponse en streaming (token par token), gestion de sessions multiples par utilisateur. \textbf{Non-fonctionnel} : faible latence du premier token (\emph{time-to-first-token}), scalabilite du service d'inference sous forte charge concurrente, cout d'inference maitrise (le calcul GPU est cher).
+\end{req}
+
+\begin{archbox}
+\textbf{Client} (streaming via WebSocket ou Server-Sent Events pour afficher la reponse au fur et a mesure) $\to$ \textbf{API Gateway} (authentification, rate limiting) $\to$ \textbf{Conversation Service} (recupere l'historique depuis un store de sessions, construit le prompt complet) $\to$ \textbf{Inference Service} (cluster de GPUs servant le LLM, avec batching dynamique des requetes concurrentes pour maximiser l'utilisation GPU) $\to$ reponse streamee de retour au client, historique persiste apres completion.
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{Pourquoi le streaming token-par-token ?} Le temps de generation complet d'une longue reponse peut depasser plusieurs secondes ; streamer chaque token des qu'il est genere ameliore drastiquement la latence percue, meme si la latence totale est identique. \textbf{Gestion de la memoire de conversation} : garder tout l'historique dans le prompt degrade la latence et le cout (le cout d'inference croit avec la longueur du prompt) -- des strategies de resume progressif ou de troncature de l'historique ancien sont necessaires au-dela d'un certain nombre de tours. \textbf{Batching dynamique cote inference} : grouper plusieurs requetes utilisateur concurrentes dans un seul batch GPU ameliore le debit global, au prix d'une latence individuelle legerement accrue pour les requetes arrivees en premier dans le batch -- compromis debit/latence classique.
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design Multi-Agent System (IA)}
+
+\begin{req}
+\textbf{Fonctionnel} : decomposer une tache complexe en sous-taches confiees a des agents specialises (ex: agent de recherche, agent de code, agent de validation) qui collaborent pour produire un resultat final. \textbf{Non-fonctionnel} : traçabilite complete du raisonnement (audit des decisions de chaque agent), robustesse face a l'echec d'un agent individuel, maitrise du cout cumule (chaque appel agent = un appel LLM facture).
+\end{req}
+
+\begin{archbox}
+\textbf{Orchestrateur/Planner} : recoit la tache globale, la decompose en sous-taches et route chacune vers l'agent specialise approprie (via function calling / tool use). Chaque \textbf{agent} dispose d'un role defini, d'un acces restreint a certains outils (recherche web, execution de code, acces base de donnees), et retourne un resultat structure a l'orchestrateur. Un \textbf{etat partage} (memoire de la session multi-agent) permet aux agents de s'appuyer sur les resultats intermediaires des autres. Une boucle de \textbf{validation/critique} peut faire relire le resultat d'un agent par un autre avant de le considerer final.
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{Un seul agent generaliste vs plusieurs agents specialises ?} La specialisation ameliore la qualite sur chaque sous-tache (un prompt/contexte plus cible par agent) mais multiplie le nombre d'appels LLM (cout et latence cumules) et introduit un risque de divergence/incoherence entre agents si l'orchestration est mal concue. \textbf{Comment eviter les boucles infinies ?} Imposer une limite stricte du nombre d'iterations/appels d'outils par tache, avec un mecanisme de "budget" explicite communique a l'orchestrateur.
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design ML Feature Store}
+
+\begin{req}
+\textbf{Fonctionnel} : centraliser le calcul et le stockage des features utilisees pour l'entrainement et l'inference des modeles ML, garantissant que les memes features sont utilisees dans les deux contextes. \textbf{Non-fonctionnel} : servir les features en ligne avec une latence de quelques millisecondes (inference temps-reel), tout en supportant des calculs batch lourds pour l'entrainement.
+\end{req}
+
+\begin{archbox}
+Architecture a double chemin, le probleme central que resout un feature store : \textbf{Offline store} (data warehouse/lake) -- historique complet des features, utilise pour entrainer les modeles sur de grands volumes avec du temps de calcul disponible. \textbf{Online store} (base cle-valeur basse latence, ex: Redis/DynamoDB) -- derniere valeur connue de chaque feature par entite, servie a l'inference en production. Un pipeline de calcul de features (batch et/ou streaming) alimente les deux stores en parallele a partir de la meme logique de transformation, pour garantir leur coherence.
+\end{archbox}
+
+\begin{tradeoff}
+Le probleme que le feature store resout explicitement est le \textbf{training-serving skew} : sans lui, l'equipe data science calcule les features d'entrainement en Python/SQL batch, tandis que l'equipe engineering recode independamment la meme logique pour l'inference temps-reel -- toute divergence entre les deux implementations degrade silencieusement la performance du modele en production. Centraliser la definition de la feature (une seule logique de transformation, executee pour alimenter les deux stores) elimine structurellement ce risque, au prix d'une infrastructure supplementaire a maintenir.
+\end{tradeoff}
+
+\end{sujet}
+
+\newpage
+% =====================================================================
+\section{Systemes metier critiques}
+% =====================================================================
+
+\begin{sujet}{Design Fraud Detection System (temps-reel)}
+
+\begin{req}
+\textbf{Fonctionnel} : evaluer chaque transaction en quasi temps-reel et decider de l'accepter, la bloquer ou la mettre en revue manuelle, en s'appuyant sur un modele ML et des regles metier. \textbf{Non-fonctionnel} : decision en moins de 100--200ms (ne doit pas degrader l'experience de paiement), tres faible taux de faux positifs (bloquer une transaction legitime coute cher en experience client), audit complet des decisions.
+\end{req}
+
+\begin{archbox}
+Transaction $\to$ \textbf{Kafka} (ingestion de l'evenement de transaction) $\to$ \textbf{Spark Streaming} (enrichissement : calcul de features contextuelles comme "nombre de transactions dans la derniere heure pour cet utilisateur", lues/mises a jour dans un \textbf{feature store} \textbf{Redis} pour la faible latence) $\to$ \textbf{ML Service} (scoring du risque via un modele pre-entraine) combine a des \textbf{regles metier} explicites (ex: montant $>$ seuil ET pays inhabituel) $\to$ decision routee : auto-approve, auto-block, ou file de \textbf{revue manuelle}. Toute decision est journalisee dans \textbf{PostgreSQL} pour l'audit, et un \textbf{dashboard}/\textbf{service d'alerte} notifie les analystes sur les patterns suspects agreges.
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{Regles metier vs modele ML} : les regles sont explicables et modifiables instantanement (utile pour reagir a une fraude emergente sans re-entrainer un modele) mais rigides et faciles a contourner une fois connues ; le ML detecte des patterns subtils non anticipes mais agit comme une boite plus ou moins noire et necessite un re-entrainement periodique face au \emph{concept drift} (les fraudeurs adaptent leurs techniques). Les systemes de production combinent les deux : les regles filtrent les cas evidents a faible cout, le ML traite la zone grise. \textbf{Latence vs precision} : un modele plus complexe (ensemble, deep learning) ameliore potentiellement la precision mais peut violer le budget de latence -- d'ou l'usage frequent de features precalculees (feature store) plutot que de tout calculer a la volee.
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design Payment Gateway}
+
+\begin{req}
+\textbf{Fonctionnel} : router une demande de paiement vers le bon processeur (carte, virement), gerer les etats du cycle de vie d'une transaction (initiee, autorisee, capturee, remboursee), notifier les systemes tiers via webhooks. \textbf{Non-fonctionnel} : \textbf{idempotence stricte} (ne jamais debiter deux fois pour une meme intention de paiement), conformite reglementaire (PCI-DSS), coherence forte sur l'etat financier (pas de "presque coherent" tolerable ici).
+\end{req}
+
+\begin{archbox}
+\textbf{API de paiement} (exige une \emph{idempotency key} fournie par le client sur chaque requete de creation) $\to$ \textbf{Service de paiement} qui persiste l'intention de transaction dans une base \textbf{SQL} avec des transactions ACID avant tout appel externe $\to$ appel au \textbf{processeur de paiement externe} (Stripe, reseau bancaire) $\to$ mise a jour de l'etat en base selon la reponse, avec une \textbf{machine a etats explicite} (pending $\to$ authorized $\to$ captured $\to$ settled / failed / refunded) $\to$ \textbf{webhooks} vers les systemes consommateurs (avec retry et signature de verification) pour notifier le resultat de maniere asynchrone et fiable.
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{Pourquoi une base SQL et non NoSQL ici ?} L'etat financier exige des transactions ACID et une coherence forte immediate -- c'est le cas d'usage canonique ou SQL est le choix par defaut, contrairement a un feed social ou l'eventual consistency est acceptable. \textbf{Idempotency key} : le client genere une cle unique par intention de paiement ; si la requete est retentee (timeout reseau, retry client), le serveur reconnait la cle deja traitee et retourne le meme resultat sans debiter une seconde fois -- protection essentielle contre le double-paiement en cas d'echec reseau ambigu (le client ne sait pas si sa premiere requete a reussi).
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design Uber Dispatch / Ride Sharing Backend}
+
+\begin{req}
+\textbf{Fonctionnel} : mettre en relation un passager avec le chauffeur disponible le plus pertinent (proximite, ETA), suivre la position en temps-reel pendant la course, calculer un prix dynamique. \textbf{Non-fonctionnel} : latence de matching de quelques secondes, mises a jour de position a haute frequence pour des millions de vehicules simultanes, disponibilite critique (un service indisponible = perte de revenu immediate).
+\end{req}
+
+\begin{archbox}
+\textbf{Ingestion de position} : chaque vehicule envoie sa position via une connexion persistante (WebSocket) a intervalle regulier $\to$ ecrite dans un \textbf{index geospatial} (ex: geohashing ou quadtree, permettant de requeter rapidement "tous les chauffeurs dans un rayon de 2km") maintenu en memoire (Redis avec extension geospatiale, ou service dedie). \textbf{Service de matching} : a la demande d'un passager, interroge l'index geospatial pour les candidats proches, applique un algorithme de scoring (distance, ETA, note du chauffeur) et propose la course au meilleur candidat avec un court delai d'acceptation avant de proposer au suivant. \textbf{Service de pricing} : calcule le prix en fonction de l'offre/demande locale en temps-reel (ratio demandes/chauffeurs disponibles par zone).
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{Index geospatial en memoire vs base geospatiale classique} : la frequence de mise a jour des positions (chaque vehicule toutes les quelques secondes, pour des millions de vehicules) impose une structure optimisee pour des ecritures/lectures tres rapides en memoire plutot qu'une base disque classique, meme avec index spatial -- au prix d'une durabilite moindre (acceptable ici car une position perimee de quelques secondes est simplement remplacee par la suivante). \textbf{Matching glouton vs matching global optimise} : proposer immediatement au chauffeur le plus proche est simple et rapide mais localement sous-optimal a l'echelle d'une zone dense (deux passagers proches pourraient echanger leurs chauffeurs pour un ETA global meilleur) -- les systemes avances batchent le matching sur de courtes fenetres pour optimiser globalement, au prix d'une latence de matching legerement accrue.
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design Netflix Streaming (video a la demande)}
+
+\begin{req}
+\textbf{Fonctionnel} : parcourir un catalogue, lancer la lecture d'une video avec demarrage quasi instantane, adapter la qualite au reseau disponible sans interruption. \textbf{Non-fonctionnel} : tres faible latence de demarrage de lecture partout dans le monde, tolerance aux variations de bande passante, cout de bande passante maitrise a l'echelle de centaines de millions d'utilisateurs.
+\end{req}
+
+\begin{archbox}
+\textbf{Pipeline d'ingestion/encodage} (hors chemin critique utilisateur) : une video source est encodee en \emph{plusieurs resolutions et bitrates}, decoupee en petits segments (quelques secondes chacun), selon un protocole de streaming adaptatif (HLS/DASH). \textbf{Distribution} : ces segments sont propages vers un \textbf{CDN} (souvent un CDN propriétaire co-localise chez les FAI pour Netflix) au plus pres des utilisateurs. \textbf{Lecture client} : le lecteur video mesure en continu la bande passante disponible et choisit dynamiquement, segment par segment, la resolution la plus adaptee (\emph{Adaptive Bitrate Streaming}) -- capable de degrader la qualite sans interrompre la lecture si le reseau se degrade.
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{Pourquoi decouper en segments plutot que streamer un seul flux continu ?} Le decoupage permet de changer de qualite \emph{entre deux segments} sans interrompre la lecture, et permet au CDN de cacher/servir independamment chaque segment (meilleure efficacite de cache que streamer depuis une position arbitraire dans un flux monolithique). \textbf{Encodage multi-bitrate a l'avance vs transcodage a la volee} : encoder toutes les variantes a l'avance (une fois, hors ligne) coute du stockage supplementaire mais garantit une latence de lecture minimale ; transcoder a la demande economiserait du stockage mais introduirait une latence inacceptable pour un usage a tres grande echelle -- Netflix choisit massivement le pre-encodage.
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design Distributed Cache (type Redis)}
+
+\begin{req}
+\textbf{Fonctionnel} : stocker des paires cle-valeur avec acces en quelques millisecondes, expiration automatique (TTL), operations atomiques simples (increment, ajout a une liste/set). \textbf{Non-fonctionnel} : tres haute disponibilite, scalabilite horizontale du volume de donnees et du debit, tolerance a la perte occasionnelle de donnees cachees (elles peuvent generalement etre recalculees depuis la source de verite).
+\end{req}
+
+\begin{archbox}
+Donnees en memoire (RAM) reparties sur plusieurs noeuds via \textbf{sharding} (hashing consistant pour minimiser la redistribution lors de l'ajout/retrait d'un noeud). Chaque shard peut etre replique (primaire + replicas) pour la disponibilite en lecture et la tolerance aux pannes. Politique d'\textbf{eviction} (LRU le plus souvent) declenchee quand la memoire disponible est atteinte, combinee a une expiration active par TTL.
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{Hashing consistant} : un hashing simple (\texttt{hash(key) mod N}) redistribuerait presque toutes les cles lors de l'ajout/retrait d'un noeud (cache quasi entierement invalide) ; le hashing consistant ne redistribue qu'une fraction proportionnelle au changement de capacite, preservant l'essentiel de l'efficacite du cache pendant un scaling. \textbf{Cache-aside vs write-through} : en \emph{cache-aside}, l'application lit le cache, et en cas d'absence (miss) va chercher en base puis peuple le cache -- simple, mais le cache peut etre temporairement absent/perime. En \emph{write-through}, chaque ecriture met a jour simultanement le cache et la base -- le cache est toujours a jour mais chaque ecriture est plus lente et plus complexe a rendre atomique entre les deux stores.
+\end{tradeoff}
+
+\end{sujet}
+
+\newpage
+% =====================================================================
+\section{Produits grand public a forte echelle}
+% =====================================================================
+
+\begin{sujet}{Design URL Shortener (TinyURL / Bitly)}
+
+\begin{req}
+\textbf{Fonctionnel} : raccourcir une URL longue en une URL courte unique, rediriger vers l'URL d'origine lors de l'acces. \textbf{Non-fonctionnel} : redirection quasi instantanee (lecture tres dominante par rapport a l'ecriture, ratio souvent 100:1 ou plus), disponibilite elevee (une panne bloque toutes les redirections existantes), URLs courtes non predictibles/collisionnables.
+\end{req}
+
+\begin{estim}
+Charge dominee par les lectures : pour 100M nouvelles URLs/mois ($\approx$ 40 ecritures/sec), un ratio lecture/ecriture de 100:1 donne $\approx$ 4\,000 lectures/sec a supporter -- oriente naturellement vers une architecture fortement cachee.
+\end{estim}
+
+\begin{archbox}
+Ecriture : generer un identifiant court unique (encodage base62 d'un compteur distribue, ou hash tronque de l'URL avec gestion de collision) $\to$ stocker le mapping \texttt{code court $\to$ URL longue} dans une base \textbf{cle-valeur} (tres bonne adequation au modele d'acces simple). Lecture : \textbf{cache} (Redis) devant la base pour absorber l'immense majorite des redirections sans toucher au stockage persistant, avec redirection HTTP 301/302 vers l'URL d'origine.
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{Compteur distribue vs hash} : un compteur global (ranges pre-alloues par noeud pour eviter un point de contention) garantit l'unicite sans collision et produit des codes courts predictibles en longueur ; un hash (ex: MD5 tronque) evite la coordination d'un compteur mais impose de gerer les collisions (rares mais possibles). \textbf{301 vs 302} : 301 (redirection permanente) est mis en cache par le navigateur/CDN, reduisant la charge serveur sur les acces repetes mais empechant de changer la destination ou de suivre les clics ulterieurs ; 302 (temporaire) permet le tracking d'analytics a chaque clic au prix d'une charge serveur plus elevee.
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design Rate Limiter}
+
+\begin{req}
+\textbf{Fonctionnel} : limiter le nombre de requetes qu'un client (utilisateur, IP, cle API) peut effectuer dans une fenetre de temps donnee, rejeter les requetes en exces. \textbf{Non-fonctionnel} : decision de limitation en quelques millisecondes sans devenir elle-meme un goulot d'etranglement, coherence du compteur meme derriere plusieurs instances de service en parallele.
+\end{req}
+
+\begin{archbox}
+Un compteur par client, stocke dans un \textbf{cache distribue} (Redis, pour la faible latence et le partage d'etat entre toutes les instances du service). Chaque requete entrante incremente atomiquement (\texttt{INCR} Redis) le compteur associe a sa fenetre de temps courante ; si le compteur depasse le seuil autorise, la requete est rejetee (HTTP 429). Le rate limiter est generalement implemente comme middleware/filtre en amont de l'API, avant tout traitement metier.
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{Algorithmes de limitation} : \emph{Fixed Window} (compteur remis a zero a intervalle fixe -- simple mais autorise un pic de 2x le seuil a la frontiere de deux fenetres) ; \emph{Sliding Window Log} (historique precis de chaque requete -- exact mais couteux en memoire) ; \emph{Sliding Window Counter} (approxime le sliding window en ponderant deux fenetres fixes -- bon compromis precision/cout, choix frequent en production) ; \emph{Token Bucket} (des jetons se rechargent a taux constant, chaque requete consomme un jeton -- autorise naturellement des rafales courtes tout en bornant le debit moyen, tres utilise pour les API publiques).
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design Notification Service}
+
+\begin{req}
+\textbf{Fonctionnel} : envoyer des notifications (push mobile, email, SMS) declenchees par des evenements applicatifs, avec priorisation et gestion des preferences utilisateur. \textbf{Non-fonctionnel} : haut debit d'envoi en periode de pic, pas de duplication de notification, degradation gracieuse si un provider externe (APNS, FCM, SendGrid) est indisponible.
+\end{req}
+
+\begin{archbox}
+Service producteur d'evenement $\to$ \textbf{file de messages} (Kafka/SQS) pour decoupler la generation de l'envoi et absorber les pics $\to$ \textbf{workers de notification} consomment la file, verifient les preferences utilisateur (opt-in/opt-out par canal) et le \emph{throttling} (eviter de spammer), puis appellent le \textbf{provider externe} approprie selon le canal (APNS/FCM pour push, SendGrid/SES pour email, Twilio pour SMS). Un \textbf{service de templates} centralise le contenu des notifications pour eviter la duplication de logique de formatage.
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{Pourquoi une file de messages plutot qu'un appel direct au provider ?} Decouple le pic de generation d'evenements (ex: une alerte declenchee pour des millions d'utilisateurs simultanement) du debit que les providers externes peuvent effectivement absorber -- la file lisse la charge et permet des retries sans bloquer le service emetteur. \textbf{Idempotence} : chaque notification porte un identifiant unique ; un worker qui retente apres un echec ambigu (timeout du provider sans confirmation) verifie d'abord si la notification a deja ete envoyee, evitant une double notification desagreable pour l'utilisateur.
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design WhatsApp / Messenger (messagerie instantanee)}
+
+\begin{req}
+\textbf{Fonctionnel} : envoyer/recevoir des messages en quasi temps-reel en tete-a-tete et en groupe, indicateurs de statut (envoye/recu/lu), fonctionnement hors-ligne avec livraison differee. \textbf{Non-fonctionnel} : latence de livraison de l'ordre de la centaine de millisecondes, garantie de livraison (pas de message perdu), scalabilite a des milliards de messages/jour, chiffrement de bout en bout.
+\end{req}
+
+\begin{archbox}
+\textbf{Connexions persistantes} : chaque client maintient une connexion \textbf{WebSocket} avec un serveur de messagerie, permettant au serveur de \emph{pousser} les messages entrants sans polling. \textbf{Routage} : un \textbf{service de presence} (souvent adosse a Redis) maintient quel serveur gere la connexion active de chaque utilisateur ; a l'envoi d'un message, le serveur destinataire est identifie et le message lui est route (via un bus interne) pour livraison immediate si l'utilisateur est en ligne. \textbf{Persistance et hors-ligne} : chaque message est d'abord ecrit durablement (base optimisee en ecriture, souvent NoSQL partitionnee par conversation) avant tentative de livraison -- si le destinataire est hors-ligne, le message reste en attente et sera livre/pousse (via notification push) a sa reconnexion.
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{WebSocket vs polling} : le polling repete impose une latence liee a l'intervalle de polling et gaspille des ressources sur des verifications sans nouveaute ; WebSocket maintient une connexion ouverte permettant une livraison poussee quasi instantanee, au prix de devoir gerer un tres grand nombre de connexions longue-duree cote serveur (dimensionnement different d'un service HTTP stateless classique). \textbf{Ecriture avant livraison} : ecrire le message en base \emph{avant} de tenter la livraison garantit qu'aucun message n'est perdu meme si la tentative de livraison temps-reel echoue -- le hors-ligne devient un cas normal traite par le meme mecanisme (relecture des messages non-acquittes a la reconnexion) plutot qu'un cas d'erreur special.
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design Instagram Feed / Facebook News Feed}
+
+\begin{req}
+\textbf{Fonctionnel} : afficher a chaque utilisateur un flux de publications de ses abonnements, classe par pertinence/recence. \textbf{Non-fonctionnel} : chargement du feed en quelques centaines de millisecondes, gestion du cas extreme d'un compte avec des dizaines de millions d'abonnes ("fan-out" massif), fraicheur raisonnable (nouveau post visible rapidement par les abonnes actifs).
+\end{req}
+
+\begin{archbox}
+Deux strategies combinees selon le profil : \textbf{Fan-out on write (push)} -- a la publication d'un post, il est immediatement insere dans le feed precalcule (cache) de chaque abonne ; le chargement du feed devient une simple lecture rapide. \textbf{Fan-out on read (pull)} -- pour les comptes a tres grand nombre d'abonnes (celebrites), precalculer le push vers des millions de feeds serait trop couteux ; le feed de leurs abonnes est alors assemble a la lecture en fusionnant les posts precalcules (comptes normaux) avec les posts recents des comptes a forte audience recuperes a la demande.
+\end{archbox}
+
+\begin{tradeoff}
+C'est le trade-off fan-out le plus classique en system design : \textbf{push} optimise la lecture (l'operation la plus frequente, largement dominante) au prix d'ecritures amplifiees a la publication (un post d'un compte a 10M abonnes = 10M ecritures) ; \textbf{pull} evite cette amplification a l'ecriture mais alourdit chaque lecture de fusion en temps-reel. La solution hybride (push par defaut, pull pour les comptes a tres large audience au-dela d'un seuil) capture le meilleur des deux, au prix d'une complexite d'implementation superieure (deux chemins de code a maintenir).
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design YouTube (plateforme video)}
+
+\begin{req}
+\textbf{Fonctionnel} : upload de video, encodage en plusieurs qualites, lecture en streaming adaptatif, recherche et recommandations. \textbf{Non-fonctionnel} : traitement d'upload asynchrone et resilient (des videos volumineuses, l'encodage prend du temps), distribution mondiale a faible latence, scalabilite du stockage a l'echelle de l'exaoctet.
+\end{req}
+
+\begin{archbox}
+\textbf{Upload} : le fichier video est envoye vers un stockage objet temporaire, l'upload confirme immediatement a l'utilisateur $\to$ un evenement declenche de maniere asynchrone un \textbf{pipeline d'encodage} (souvent distribue, decoupant la video en segments encodes en parallele sur plusieurs workers) produisant les variantes multi-resolution. \textbf{Stockage final} : les segments encodes sont ecrits en stockage objet durable puis distribues via \textbf{CDN}. \textbf{Metadonnees} (titre, description, statistiques de vues) dans une base separee du contenu binaire lui-meme. \textbf{Lecture} : streaming adaptatif comme pour Netflix (voir section precedente), avec le compteur de vues incremente de maniere asynchrone (pas sur le chemin critique de lecture) pour eviter d'ecrire en base a chaque seconde de visionnage.
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{Traitement synchrone vs asynchrone de l'upload} : encoder une video en plusieurs resolutions avant de confirmer l'upload bloquerait l'utilisateur potentiellement plusieurs minutes ; traiter l'encodage de maniere asynchrone (l'utilisateur voit "video en cours de traitement") ameliore drastiquement l'experience percue au prix d'un delai avant disponibilite reelle de la video. \textbf{Separation metadonnees/contenu binaire} : les metadonnees (forte frequence de lecture/ecriture, petite taille) et le contenu video (tres volumineux, majoritairement en lecture via CDN) ont des profils d'acces radicalement differents justifiant des systemes de stockage distincts et independamment scalables.
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design Google Drive / Dropbox (stockage et synchronisation de fichiers)}
+
+\begin{req}
+\textbf{Fonctionnel} : upload/download de fichiers, synchronisation automatique entre plusieurs appareils, partage avec controle d'acces, historique de versions. \textbf{Non-fonctionnel} : coherence eventuelle acceptable entre appareils (quelques secondes de decalage tolerable), efficacite reseau (ne pas re-transferer un fichier entier pour un petit changement), durabilite tres forte des donnees (perte de fichier utilisateur inacceptable).
+\end{req}
+
+\begin{archbox}
+\textbf{Chunking} : chaque fichier est decoupe en blocs (chunks) de taille fixe, chacun identifie par un hash de son contenu. \textbf{Stockage} : les chunks sont stockes dans un stockage objet durable (replique/erasure-coded pour la durabilite), dedupliques naturellement si deux fichiers partagent des chunks identiques. \textbf{Metadonnees} : une base separee associe chaque fichier a la liste ordonnee de ses chunks, plus les informations de version et de permissions. \textbf{Synchronisation} : un client local detecte les modifications (souvent via des evenements systeme de fichiers), ne transfere que les chunks modifies/nouveaux (pas le fichier entier), et un service de notification (souvent via une connexion persistante) informe les autres appareils du meme utilisateur qu'une mise a jour est disponible pour declencher leur propre synchronisation.
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{Chunking} : decouper en blocs permet de ne transferer que les portions modifiees d'un gros fichier (efficacite reseau majeure pour des fichiers volumineux edites incrementalement) et permet une deduplication naturelle au niveau du stockage. Compromis : la reconstruction d'un fichier necessite de recuperer et reassembler tous ses chunks, ajoutant une complexite absente d'un stockage "fichier entier". \textbf{Resolution de conflits} : si le meme fichier est modifie hors-ligne sur deux appareils avant resynchronisation, le systeme doit detecter le conflit (via versioning/vecteurs d'horloge) et generer une copie de conflit plutot que silencieusement ecraser une des deux versions.
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design Reddit (forum de discussion avec vote)}
+
+\begin{req}
+\textbf{Fonctionnel} : publier des posts dans des communautes (subreddits), voter (upvote/downvote), classer les posts par score/recence, commenter en fils imbriques. \textbf{Non-fonctionnel} : lecture tres dominante par rapport a l'ecriture, calcul de classement (ranking) a jour sans recalculer sur l'integralite des posts a chaque requete, gestion de fils de commentaires profondement imbriques.
+\end{req}
+
+\begin{archbox}
+\textbf{Ecriture d'un vote} : incremente/decremente un compteur associe au post (dans un cache/compteur distribue pour absorber le volume de votes sans surcharger la base principale), la mise a jour du \emph{score de classement} (souvent une combinaison du nombre de votes et de la recence, decroissant avec le temps) est recalculee de maniere incrementale, pas recalculee globalement. \textbf{Lecture du feed d'un subreddit} : les posts sont precalcules/caches, tries par le score de classement maintenu en quasi temps-reel, avec pagination. \textbf{Commentaires} : stockes avec une reference a leur parent, permettant de reconstruire l'arbre d'imbrication a la lecture -- souvent charges de maniere paresseuse (les reponses profondement imbriquees ne sont chargees qu'a la demande de l'utilisateur).
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{Recalcul incremental vs global du score} : recalculer le classement de tous les posts d'un subreddit populaire a chaque vote serait bien trop couteux ; maintenir un score incrementalement mis a jour (formule de type "hot ranking" combinant votes et decroissance temporelle) permet un tri efficace en base/cache sans recalcul de masse. \textbf{Stockage des commentaires en arbre} : stocker chaque commentaire avec juste une reference a son parent (plutot que d'imbriquer physiquement les structures) simplifie l'ecriture d'un nouveau commentaire (toujours une simple insertion) au prix d'une reconstruction de l'arbre necessaire a la lecture.
+\end{tradeoff}
+
+\end{sujet}
+
+\begin{sujet}{Design Slack / Discord (messagerie d'equipe et communautes)}
+
+\begin{req}
+\textbf{Fonctionnel} : canaux de discussion textuelle en temps-reel, historique consultable, presence en ligne, notifications push pour les mentions. \textbf{Non-fonctionnel} : livraison en temps-reel a de nombreux membres simultanes d'un meme canal (contrairement a WhatsApp, un canal peut avoir des milliers de membres actifs), recherche full-text performante dans un historique volumineux.
+\end{req}
+
+\begin{archbox}
+Similaire a l'architecture de messagerie instantanee (connexions \textbf{WebSocket} persistantes, service de presence), avec une difference structurelle cle : un message envoye dans un canal doit etre diffuse (\emph{fan-out}) a tous les membres actuellement connectes a ce canal, pas a un seul destinataire -- gere via un mecanisme de \emph{pub/sub} interne (le serveur qui recoit le message le publie sur un canal interne, chaque connexion WebSocket abonnee au canal correspondant le recoit et le pousse a son client). L'historique est indexe dans un moteur de recherche full-text (Elasticsearch) en parallele du stockage principal, pour la fonctionnalite de recherche dans les messages passes.
+\end{archbox}
+
+\begin{tradeoff}
+\textbf{Fan-out par canal vs par utilisateur} : diffuser a tous les membres connectes d'un canal (plutot que de dupliquer le message dans une file par destinataire comme pour de la messagerie 1-a-1) evite l'amplification d'ecriture sur les canaux tres peuples, mais impose une architecture de pub/sub interne capable de router efficacement vers potentiellement des milliers de connexions WebSocket simultanees reparties sur plusieurs serveurs. \textbf{Recherche full-text separee} : indexer dans un moteur dedie (plutot que \texttt{LIKE '\%terme\%'} sur la base principale) est necessaire des que le volume d'historique et les besoins de pertinence de recherche depassent ce qu'une base relationnelle generaliste gere efficacement.
+\end{tradeoff}
+
+\end{sujet}
+
+\newpage
+% =====================================================================
+\section{Aide-memoire final}
+% =====================================================================
+
+\begin{cle}[Les patterns qui reviennent partout]
+Malgre la diversite des 30 sujets ci-dessus, un petit nombre de patterns architecturaux recurrents suffit a couvrir la grande majorite des cas : \textbf{fan-out on write vs on read} (feed, notifications), \textbf{sharding + hashing consistant} (cache, base de donnees, index geospatial), \textbf{decouplage par file de messages} (Kafka partout ou producteur et consommateur ont des debits/disponibilites differents), \textbf{cache devant une base} (lecture dominante), \textbf{CDC/log-based capture} (propager un changement sans re-interroger la source), et \textbf{architecture en deux etages retrieval + ranking} (recherche, recommandation, RAG). Reconnaitre lequel de ces patterns s'applique a un nouveau probleme est plus utile que de memoriser 30 architectures distinctes.
+\end{cle}
+
+\begin{tradeoff}[Rappel : le CAP theorem en pratique]
+Face a une partition reseau, un systeme distribue doit choisir entre \textbf{Consistency} (toutes les lectures voient la derniere ecriture) et \textbf{Availability} (le systeme continue de repondre). En pratique, la plupart des systemes visent une \emph{eventual consistency} (disponible, coherent apres un court delai) pour les donnees a faible enjeu (feed social, compteur de vues), et une coherence forte uniquement la ou l'enjeu metier l'exige explicitement (solde bancaire, inventaire, paiement).
+\end{tradeoff}
+
+\end{document}
